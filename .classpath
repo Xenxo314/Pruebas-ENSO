@@ -6,5 +6,10 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/5"/>
+	<classpathentry kind="lib" path="C:/Users/Xen User/Desktop/byte-buddy-1.12.22.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Xen User/Desktop/mockito-core-4.11.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Xen User/Desktop/objenesis-3.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
