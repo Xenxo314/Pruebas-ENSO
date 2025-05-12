@@ -1,4 +1,4 @@
-package enso.coche;
+package coche;
 
 import java.util.*;
 import java.io.*;
@@ -46,6 +46,10 @@ public class Coche {
         return null;
     }
 	
+	public void agregarUsuario(Usuario usuario) {
+        pasajeros.add(usuario);
+    }
+	
 	// MÉTODOS
 	public void leer_csv(String rutaArchivo) {
         String linea;
@@ -78,7 +82,7 @@ public class Coche {
                     Usuario usuario = buscarUsuario(nombreUsuario);
                     if (usuario == null) {
                         usuario = new Usuario(nombreUsuario, apellidoUsuario);
-                        pasajeros.add(usuario);
+                        agregarUsuario(usuario);
                     }
                     
                     //System.out.println(usuario);
@@ -93,13 +97,53 @@ public class Coche {
             System.err.println("Error al convertir la duración a un entero.");
         }
     }
+	
+ /**
+ * Reproduce una canción de cada usuario de forma cíclica.
+ * Si un usuario no tiene canciones, se omite.
+ * 
+ * @return Lista de canciones reproducidas en una vuelta completa.
+ */
+    public List<Cancion> reproducirCancionDeCadaUsuario() {
+        List<Cancion> cancionesReproducidas = new ArrayList<>();
 
-    
+        for (Usuario usuario : pasajeros) {
+            Cancion cancion = usuario.obtenerSiguienteCancion();
+            if (cancion != null) {
+                cancionesReproducidas.add(cancion);
+            }
+        }
 
+        return cancionesReproducidas;
+    }
     
-	
-	
-	
+    /**
+     * Reproduce canciones de los usuarios hasta alcanzar un tiempo máximo.
+     * 
+     * @param tiempoMaximoSegundos Tiempo máximo de reproducción en segundos.
+     * @return Lista de canciones reproducidas hasta alcanzar el tiempo máximo.
+     */
+    public List<Cancion> reproducirHastaTiempo(int tiempoMaximoSegundos) {
+        List<Cancion> cancionesReproducidas = new ArrayList<>();
+        int tiempoAcumulado = 0;
+
+        while (tiempoAcumulado < tiempoMaximoSegundos) {
+            List<Cancion> cancionesVuelta = reproducirCancionDeCadaUsuario();
+
+            for (Cancion cancion : cancionesVuelta) {
+            	cancionesReproducidas.add(cancion);
+                tiempoAcumulado += cancion.getDuracion();
+                if (tiempoAcumulado <= tiempoMaximoSegundos) {
+                    continue;
+                } else {
+                    // Si la canción actual supera el tiempo disponible, salimos
+                    return cancionesReproducidas;
+                }
+            }
+        }
+
+        return cancionesReproducidas;
+    }
 	
 	
 }
