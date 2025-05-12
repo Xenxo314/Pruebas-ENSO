@@ -1,4 +1,4 @@
-package enso.coche;
+package coche;
 
 import static org.junit.jupiter.api.Assertions.*;
 

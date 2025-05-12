@@ -1,4 +1,4 @@
-package enso.coche;
+package coche;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,11 +14,6 @@ class CancionTest {
 
 	@BeforeEach
 	void setUp() throws Exception {
-	}
-
-	@Test
-	void test() {
-		fail("Not yet implemented");
 	}
 
 }

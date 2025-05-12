@@ -1,4 +1,4 @@
-package enso.coche;
+package coche;
 
 public class Cancion {
 

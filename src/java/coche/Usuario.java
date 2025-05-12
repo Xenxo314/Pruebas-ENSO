@@ -1,4 +1,4 @@
-package enso.coche;
+package coche;
 
 import java.util.*;
 import java.io.*;
@@ -21,7 +21,6 @@ public class Usuario {
         this.indiceCancionActual = 0;
     }
 
-    
 	@Override
 	public int hashCode() {
 		return Objects.hash(apellido, nombre);
@@ -121,7 +120,6 @@ public class Usuario {
                 indiceAlbumActual = 0;
             }
         }
-
         return cancion;
     }
 
