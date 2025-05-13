@@ -38,11 +38,15 @@ public class Usuario {
 		return Objects.equals(apellido, other.apellido) && Objects.equals(nombre, other.nombre);
 	}
 	
-	@Override
-    public String toString() {
-        return "Usuario: " + nombre + " " + apellido + ", Álbumes: " + listaAlbumes;
-    }
 	
+	
+	@Override
+	public String toString() {
+		return "Usuario [nombre=" + nombre + ", apellido=" + apellido + ", listaAlbumes=" + listaAlbumes
+				+ ", indiceAlbumActual=" + indiceAlbumActual + ", indiceCancionActual=" + indiceCancionActual
+				+ ", numCancionesUsuario=" + numCancionesUsuario + "]";
+	}
+
 	// GETTERS	
 	public String getNombre() {
 		return nombre;

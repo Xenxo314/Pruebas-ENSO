@@ -1,12 +1,19 @@
 package coche;
 
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.io.IOException;
+import java.util.*;
+
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +21,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
+
 
 class CocheTest {
 	
@@ -74,6 +84,23 @@ class CocheTest {
         // Comprobar que se le han asignado canciones a un usuario
         assertFalse(coche.getPasajeros().get(0).getListaAlbumes().isEmpty(), "El usuario " + coche.getPasajeros().get(0).getNombre() + " no tiene canciones asociadas");
     }
+	
+	 @Test
+    void lecturaCSV() throws IOException {
+        // Crear el mock de Coche
+        Coche coche = Mockito.mock(Coche.class);
+
+        InOrder orden = inOrder(coche);
+
+        // Simular la llamada a leer_csv()
+        coche.leer_csv("src/resources/discos_usuarios.csv");
+
+        // Verificar el orden de las llamadas
+        orden.verify(coche).leer_csv("src/resources/discos_usuarios.csv");
+        //orden.verify(coche).agregarUsuario(any(Usuario.class));
+    }
+	
+	////////////////////////////////////////////////////////////////
 	
 	/*
 	 * Añade 2 usuarios con 2 canciones cada uno. Prueba si al llamar
@@ -297,10 +324,47 @@ class CocheTest {
     
     ////////////////////////////////////////////////////////////////
 
+    
+    
+    ////////////////////////////////////////////////////////////////
     @Test
-    @DisplayName("Creación de una playlist con 2 usuarios y de canciones con duración de menos de 3 minutos")
-    void testComprobarPlaylist() {
+    @DisplayName("Playlist con canciones < 3 min")
+    void playlistMenor3Min() {
     	
+    	// Arrange
+    	String rutaArchivo = "src/resources/discos_usuarios.csv";
+        coche.leer_csv(rutaArchivo);
+        
+        // Act
+        coche.crearPlaylistPersonalizada(Arrays.asList("Juan Pérez", "María López"), 3);
+
+        // Assert
+        assertEquals(3, coche.getCanciones().size());
+        assertTrue(coche.getCanciones().stream().anyMatch(c -> c.getTitulo().equals("Intro: Persona")), "Debería contener Intro: Persona");
+    }
+
+    @Test
+    @DisplayName("Usuarios inexistentes")
+    void usuariosInexistentes() {
+        initCoche();
+        coche.crearPlaylistPersonalizada(Arrays.asList("Carlos Fernández", "Pedro López"), 5);
+        assertTrue(coche.getCanciones().isEmpty(), "La playlist debe estar vacía");
+    }
+
+    @Test
+    @DisplayName("Sin usuarios")
+    void sinUsuarios() {
+        initCoche();
+        coche.crearPlaylistPersonalizada(new ArrayList<>(), 5);
+        assertTrue(coche.getCanciones().isEmpty(), "La playlist debe estar vacía");
+    }
+
+    @Test
+    @DisplayName("Duración muy baja")
+    void duracionBaja() {
+        initCoche();
+        coche.crearPlaylistPersonalizada(Arrays.asList("Juan Pérez", "Ana García"), 1);
+        assertTrue(coche.getCanciones().isEmpty(), "La playlist debe estar vacía");
     }
     
     

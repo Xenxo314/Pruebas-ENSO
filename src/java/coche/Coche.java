@@ -82,7 +82,6 @@ public class Coche {
                         usuario = new Usuario(nombreUsuario, apellidoUsuario);
                         agregarUsuario(usuario);
                     }
-                    
                     // Crear o buscar Artista
                     Artista artista = new Artista(nombreArtista);
                     
@@ -154,15 +153,18 @@ public class Coche {
 
     ////////////////////////////////////////////////////////////////
     
+	
+	
+	////////////////////////////////////////////////////////////////
+	
 	/**
 	 * Crea una playlist con los usuarios especificados y canciones con duración menor a los minutos dados.
 	 * 
 	 * @param nombresUsuarios Lista de nombres y apellidos de los usuarios (Ej: "Juan Pérez").
 	 * @param duracionMaxMinutos Duración máxima de las canciones en minutos.
 	 */
-	public void crearPlaylist(List<String> nombresUsuarios, int duracionMaxMinutos) {
+	public void crearPlaylistPersonalizada(List<String> nombresUsuarios, int duracionMaxMinutos) {
 	    int duracionMaxSegundos = duracionMaxMinutos * 60;
-	    List<Cancion> playlist = new ArrayList<>();
 
 	    for (String nombreCompleto : nombresUsuarios) {
 	        String[] partes = nombreCompleto.split(" ");
@@ -170,20 +172,20 @@ public class Coche {
 	        String apellido = partes.length > 1 ? partes[1] : "";
 
 	        Usuario usuario = buscarUsuario(nombre, apellido);
+	        
+	        
 
 	        if (usuario != null) {
 	            for (Album album : usuario.getListaAlbumes()) {
+	            	
 	                for (Cancion cancion : album.getListaCanciones()) {
 	                    if (cancion.getDuracion() < duracionMaxSegundos) {
-	                        playlist.add(cancion);
+	                    	canciones.add(cancion);
 	                    }
 	                }
 	            }
 	        }
 	    }
-
-	    // Asignar la playlist al coche
-	    this.canciones = new ArrayList<>(playlist);
 	}
 
 

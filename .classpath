@@ -9,5 +9,8 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/5"/>
+	<classpathentry kind="lib" path="D:/Users/Usuario/Documentos/eclipse-workspace/Mockito4Funciona/byte-buddy-1.12.22.jar"/>
+	<classpathentry kind="lib" path="D:/Users/Usuario/Documentos/eclipse-workspace/Mockito4Funciona/mockito-core-4.11.0.jar"/>
+	<classpathentry kind="lib" path="D:/Users/Usuario/Documentos/eclipse-workspace/Mockito4Funciona/objenesis-3.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
