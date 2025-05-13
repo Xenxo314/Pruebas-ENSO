@@ -1,6 +1,7 @@
 package coche;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.io.*;
 public class Coche {
 
@@ -35,22 +36,24 @@ public class Coche {
 	public void setPasajeros(ArrayList<Usuario> pasajeros) {
 		this.pasajeros = pasajeros;
 	}
-
+	
 	// MÉTODOS AUXILIARES
-	private Usuario buscarUsuario(String nombreUsuario) {
-        for (Usuario usuario : pasajeros) {
-            if (usuario.getNombre().equals(nombreUsuario)) {
-                return usuario;
-            }
-        }
-        return null;
-    }
+	private Usuario buscarUsuario(String nombre, String apellido) {
+	    for (Usuario usuario : pasajeros) {
+	        if (usuario.getNombre().equals(nombre) && usuario.getApellido().equals(apellido)) {
+	            return usuario;
+	        }
+	    }
+	    return null;
+	}
+
 	
 	public void agregarUsuario(Usuario usuario) {
-        pasajeros.add(usuario);
+        pasajeros.add(usuario);  
     }
 	
 	// MÉTODOS
+	////////////////////////////////////////////////////////////////
 	public void leer_csv(String rutaArchivo) {
         String linea;
         String separador = ",";
@@ -63,8 +66,8 @@ public class Coche {
                 	int id = Integer.parseInt(valores[0]);
                     String nombreUsuario = valores[1];
                     String apellidoUsuario = valores[2];
-                    String artista = valores[3];
-                    String album = valores[4];
+                    String nombreArtista = valores[3];
+                    String nombreAlbum = valores[4];
                     String titulo = valores[5];
                     String duracion = valores[6];
                     
@@ -72,23 +75,28 @@ public class Coche {
                     int minutos = Integer.parseInt(partes[0]);
                     int segundos = Integer.parseInt(partes[1]);
                     int duracionEnSegundos = minutos * 60 + segundos;
-
-                    // Crear canción
-                    Cancion cancion = new Cancion(id, titulo, album, artista, duracionEnSegundos);
                     
-                    //System.out.println(cancion);
-
                     // Buscar o crear el usuario
-                    Usuario usuario = buscarUsuario(nombreUsuario);
+                    Usuario usuario = buscarUsuario(nombreUsuario, apellidoUsuario);
                     if (usuario == null) {
                         usuario = new Usuario(nombreUsuario, apellidoUsuario);
                         agregarUsuario(usuario);
                     }
                     
-                    //System.out.println(usuario);
-
-                    // Agregar la canción al usuario
+                    // Crear o buscar Artista
+                    Artista artista = new Artista(nombreArtista);
+                    
+                    // Crear o buscar Album
+                    Album album = usuario.buscarAlbum(nombreAlbum);
+                    if (album == null) {
+                    	album = new Album(nombreAlbum, artista);
+                        usuario.agregarAlbum(album);
+                    }
+                    
+                    // Crear canción
+                    Cancion cancion = new Cancion(id, titulo, album, artista, duracionEnSegundos);
                     usuario.agregarCancion(cancion);
+                    
                 }
             }
         } catch (IOException e) {
@@ -104,17 +112,14 @@ public class Coche {
  * 
  * @return Lista de canciones reproducidas en una vuelta completa.
  */
-    public List<Cancion> reproducirCancionDeCadaUsuario() {
-        List<Cancion> cancionesReproducidas = new ArrayList<>();
+    public void reproducirCancionDeCadaUsuario() {
 
         for (Usuario usuario : pasajeros) {
             Cancion cancion = usuario.obtenerSiguienteCancion();
             if (cancion != null) {
-                cancionesReproducidas.add(cancion);
+                canciones.add(cancion);
             }
         }
-
-        return cancionesReproducidas;
     }
     
     /**
@@ -123,27 +128,64 @@ public class Coche {
      * @param tiempoMaximoSegundos Tiempo máximo de reproducción en segundos.
      * @return Lista de canciones reproducidas hasta alcanzar el tiempo máximo.
      */
-    public List<Cancion> reproducirHastaTiempo(int tiempoMaximoSegundos) {
-        List<Cancion> cancionesReproducidas = new ArrayList<>();
+    public void reproducirHastaTiempo(int tiempoMaximoSegundos) {
         int tiempoAcumulado = 0;
-
-        while (tiempoAcumulado < tiempoMaximoSegundos) {
-            List<Cancion> cancionesVuelta = reproducirCancionDeCadaUsuario();
-
-            for (Cancion cancion : cancionesVuelta) {
-            	cancionesReproducidas.add(cancion);
-                tiempoAcumulado += cancion.getDuracion();
-                if (tiempoAcumulado <= tiempoMaximoSegundos) {
-                    continue;
-                } else {
-                    // Si la canción actual supera el tiempo disponible, salimos
-                    return cancionesReproducidas;
+        
+        while (true) {
+        	for (Usuario usuario : pasajeros) {
+                Cancion cancion = usuario.obtenerSiguienteCancion();
+                int nuevaDuracion = tiempoAcumulado + cancion.getDuracion();
+                if (cancion != null && nuevaDuracion < tiempoMaximoSegundos) {
+                    canciones.add(cancion);
+                    tiempoAcumulado = nuevaDuracion;
                 }
+                else
+                	return;
             }
         }
-
-        return cancionesReproducidas;
     }
+
 	
-	
+    ////////////////////////////////////////////////////////////////
+    
+	public void randomizarPlayList(){
+		Collections.shuffle(canciones);
+	}
+
+    ////////////////////////////////////////////////////////////////
+    
+	/**
+	 * Crea una playlist con los usuarios especificados y canciones con duración menor a los minutos dados.
+	 * 
+	 * @param nombresUsuarios Lista de nombres y apellidos de los usuarios (Ej: "Juan Pérez").
+	 * @param duracionMaxMinutos Duración máxima de las canciones en minutos.
+	 */
+	public void crearPlaylist(List<String> nombresUsuarios, int duracionMaxMinutos) {
+	    int duracionMaxSegundos = duracionMaxMinutos * 60;
+	    List<Cancion> playlist = new ArrayList<>();
+
+	    for (String nombreCompleto : nombresUsuarios) {
+	        String[] partes = nombreCompleto.split(" ");
+	        String nombre = partes[0];
+	        String apellido = partes.length > 1 ? partes[1] : "";
+
+	        Usuario usuario = buscarUsuario(nombre, apellido);
+
+	        if (usuario != null) {
+	            for (Album album : usuario.getListaAlbumes()) {
+	                for (Cancion cancion : album.getListaCanciones()) {
+	                    if (cancion.getDuracion() < duracionMaxSegundos) {
+	                        playlist.add(cancion);
+	                    }
+	                }
+	            }
+	        }
+	    }
+
+	    // Asignar la playlist al coche
+	    this.canciones = new ArrayList<>(playlist);
+	}
+
+
+
 }

@@ -1,22 +1,27 @@
 package coche;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class Album {
 
 	private Artista artista;
 	private String nombre;
+	 private List<Cancion> listaCanciones;
 
 	public Album() {
 		super();
 		artista = new Artista();
 		nombre = new String();
+		listaCanciones = new ArrayList<Cancion>();
 	}
 
-	public Album(Artista artista, String nombre) {
+	public Album(String nombre, Artista artista) {
 		super();
 		this.artista = artista;
 		this.nombre = nombre;
+		listaCanciones = new ArrayList<Cancion>();
 	}
 
 	@Override
@@ -33,12 +38,8 @@ public class Album {
 		if (getClass() != obj.getClass())
 			return false;
 		Album other = (Album) obj;
-		return Objects.equals(artista, other.artista) && Objects.equals(nombre, other.nombre);
-	}
-
-	@Override
-	public String toString() {
-		return "Album [artista=" + artista + ", nombre=" + nombre + "]";
+		return Objects.equals(artista, other.artista) && Objects.equals(listaCanciones, other.listaCanciones)
+				&& Objects.equals(nombre, other.nombre);
 	}
 
 	public Artista getArtista() {
@@ -56,6 +57,25 @@ public class Album {
 	public void setNombre(String nombre) {
 		this.nombre = nombre;
 	}
+
+	public List<Cancion> getListaCanciones() {
+		return listaCanciones;
+	}
+
+	public void setListaCanciones(List<Cancion> listaCanciones) {
+		this.listaCanciones = listaCanciones;
+	}
+	
+	// MÉTODOS AUXILIARES
+	public void agregarCancion (Cancion cancion) {
+		listaCanciones.add(cancion);
+		
+	}
+	
+	
+
+
+
 
 	
 

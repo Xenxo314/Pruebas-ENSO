@@ -6,19 +6,19 @@ public class Usuario {
 
 	private String nombre;
 	private String apellido;
-	
-	private Map<String, List<Cancion>> cancionesPorAlbum;
-    private List<String> listaAlbumes;
+    private List<Album> listaAlbumes;
     private int indiceAlbumActual;
     private int indiceCancionActual;
+    
+    private int numCancionesUsuario;
 
     public Usuario(String nombre, String apellido) {
         this.nombre = nombre;
         this.apellido = apellido;
-        this.cancionesPorAlbum = new LinkedHashMap<>();
-        this.listaAlbumes = new ArrayList<>();
+        this.listaAlbumes = new ArrayList<Album>();
         this.indiceAlbumActual = 0;
         this.indiceCancionActual = 0;
+        this.numCancionesUsuario = 0;
     }
 
 	@Override
@@ -50,10 +50,7 @@ public class Usuario {
 	public String getApellido() {
 		return apellido;
 	}
-	public Map<String, List<Cancion>> getCancionesPorAlbum() {
-		return cancionesPorAlbum;
-	}
-	public List<String> getListaAlbumes() {
+	public List<Album> getListaAlbumes() {
 		return listaAlbumes;
 	}
 	public int getIndiceAlbumActual() {
@@ -70,10 +67,7 @@ public class Usuario {
 	public void setApellido(String apellido) {
 		this.apellido = apellido;
 	}
-	public void setCancionesPorAlbum(Map<String, List<Cancion>> cancionesPorAlbum) {
-		this.cancionesPorAlbum = cancionesPorAlbum;
-	}
-	public void setListaAlbumes(List<String> listaAlbumes) {
+	public void setListaAlbumes(List<Album> listaAlbumes) {
 		this.listaAlbumes = listaAlbumes;
 	}
 	public void setIndiceAlbumActual(int indiceAlbumActual) {
@@ -83,46 +77,66 @@ public class Usuario {
 		this.indiceCancionActual = indiceCancionActual;
 	}
 
-	// FUNCIONES AUXILIARES
+	// FUNCIONES AUXILIARES	
 	public void agregarCancion(Cancion cancion) {
-        String album = cancion.getAlbum();
-        cancionesPorAlbum.putIfAbsent(album, new ArrayList<>());
-        cancionesPorAlbum.get(album).add(cancion);
-
-        // Si el álbum es nuevo, lo añadimos a la lista de álbumes
-        if (!listaAlbumes.contains(album)) {
-            listaAlbumes.add(album);
+		cancion.getAlbum().agregarCancion(cancion);
+		numCancionesUsuario++;
+	}
+	public Album buscarAlbum(String nombreAlbum) {
+        for (Album album : listaAlbumes) {
+            if (album.getNombre().equals(nombreAlbum)) {
+                return album;
+            }
         }
+        return null;
+    }
+	
+	public void agregarAlbum(Album album) {
+        listaAlbumes.add(album);
     }
 	
 	// FUNCIONES
-    public Cancion obtenerSiguienteCancion() {
-        if (listaAlbumes.isEmpty()) {
-            return null; // No hay canciones
-        }
+	public Cancion obtenerSiguienteCancion() {
+	    if (listaAlbumes.isEmpty()) return null;
+	    
+	    if (numCancionesUsuario == 0) return null;
+	   
+	    while (true) {
+	        Album albumActual = listaAlbumes.get(indiceAlbumActual);
+	        List<Cancion> cancionesAlbum = albumActual.getListaCanciones();
 
-        String albumActual = listaAlbumes.get(indiceAlbumActual);
-        List<Cancion> cancionesAlbum = cancionesPorAlbum.get(albumActual);
+	        // Si el álbum actual tiene canciones disponibles
+	        if (!cancionesAlbum.isEmpty()) {
+	            // Si aún quedan canciones en el álbum actual
+	            if (indiceCancionActual < cancionesAlbum.size()) {
 
-        // Obtener la canción actual
-        Cancion cancion = cancionesAlbum.get(indiceCancionActual);
+		        	
+	                Cancion cancion = cancionesAlbum.get(indiceCancionActual);
+	                
+	                indiceCancionActual++;
 
-        // Avanzar al siguiente índice de canción
-        indiceCancionActual++;
+	                // Si alcanzamos el final del álbum, pasamos al siguiente álbum
+	                if (indiceCancionActual >= cancionesAlbum.size()) {
+	                    indiceCancionActual = 0;
+	                    indiceAlbumActual++;
 
-        // Si llegamos al final del álbum, pasamos al siguiente álbum
-        if (indiceCancionActual >= cancionesAlbum.size()) {
-            indiceCancionActual = 0;
-            indiceAlbumActual++;
+	                    // Si hemos recorrido todos los álbumes, volvemos al primero
+	                    if (indiceAlbumActual >= listaAlbumes.size()) {
+	                        indiceAlbumActual = 0;
+	                    }
+	                }
+	                return cancion;
+	            }
+	        }
 
-            // Si llegamos al final de todos los álbumes, volvemos al primero
-            if (indiceAlbumActual >= listaAlbumes.size()) {
-                indiceAlbumActual = 0;
-            }
-        }
-        return cancion;
-    }
+	        // Si el álbum actual no tiene canciones, pasamos al siguiente álbum
+	        indiceAlbumActual++;
+	        indiceCancionActual = 0;
 
-	
-	
+	        // Si llegamos al final de los álbumes, volvemos al primero
+	        if (indiceAlbumActual >= listaAlbumes.size()) {
+	            indiceAlbumActual = 0;
+	        }
+	    }
+	}
 }

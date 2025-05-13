@@ -17,12 +17,24 @@ class UsuarioTest {
 	@BeforeEach
 	void setUp() throws Exception {
 		usuario = new Usuario("Juan", "Pérez");
+		
+		Artista artista1 = new Artista("Artista1");
+	    Artista artista2 = new Artista("Artista2");
+	    
+	    Album album1 = new Album("Album1", artista1);
+	    Album album2 = new Album("Album2", artista2);
+	    
+	    // Añadir canciones de dos álbumes
+        usuario.agregarAlbum(album1);
+        usuario.agregarCancion(new Cancion(1, "Cancion1", album1, artista1, 180));
+        usuario.agregarCancion(new Cancion(2, "Cancion2", album1, artista1, 200));
+        
+        usuario.agregarAlbum(album2);
+        usuario.agregarCancion(new Cancion(3, "Cancion3", album2, artista2, 240));
+        usuario.agregarCancion(new Cancion(3, "Cancion4", album2, artista2, 220));
+	    
 
-        // Añadir canciones de dos álbumes
-        usuario.agregarCancion(new Cancion(1, "Cancion1", "Album1", "Artista1", 180));
-        usuario.agregarCancion(new Cancion(2, "Cancion2", "Album1", "Artista1", 200));
-        usuario.agregarCancion(new Cancion(3, "Cancion3", "Album2", "Artista2", 240));
-        usuario.agregarCancion(new Cancion(4, "Cancion4", "Album2", "Artista2", 220));
+        
 	}
 
 	@Test

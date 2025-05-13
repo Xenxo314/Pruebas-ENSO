@@ -4,11 +4,11 @@ public class Cancion {
 
 	private int id;
 	private String titulo;
-	private String album;
-	private String artista;
+	private Album album;
+	private Artista artista;
 	private int duracion;
 	
-	public Cancion(int id, String titulo, String album, String artista, int duracion) {
+	public Cancion(int id, String titulo, Album album, Artista artista, int duracion) {
 		super();
 		this.id = id;
 		this.titulo = titulo;
@@ -29,10 +29,10 @@ public class Cancion {
 	public String getTitulo() {
 		return titulo;
 	}
-	public String getAlbum() {
+	public Album getAlbum() {
 		return album;
 	}
-	public String getArtista() {
+	public Artista getArtista() {
 		return artista;
 	}
 	public int getDuracion() {
@@ -46,10 +46,10 @@ public class Cancion {
 	public void setTitulo(String titulo) {
 		this.titulo = titulo;
 	}
-	public void setAlbum(String album) {
+	public void setAlbum(Album album) {
 		this.album = album;
 	}
-	public void setArtista(String artista) {
+	public void setArtista(Artista artista) {
 		this.artista = artista;
 	}
 	public void setDuracion(int duracion) {
