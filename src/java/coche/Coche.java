@@ -138,23 +138,35 @@ public class Coche {
      */
     public void reproducirHastaTiempo(int tiempoMaximoSegundos) {
         int tiempoAcumulado = 0;
+        int cancionesVisitadas = 0;
 
-        while (tiempoAcumulado < tiempoMaximoSegundos) {
+        // Calcular el total de canciones en todos los usuarios
+        int totalCanciones = 0;
+        
+        for (Usuario pasajero : pasajeros) {
+        	totalCanciones += pasajero.getNumeroCanciones();
+        }
+        
+        
+        System.out.println(totalCanciones);
+        while (cancionesVisitadas < totalCanciones) {
+
             for (Usuario usuario : pasajeros) {
                 Cancion cancion = usuario.obtenerSiguienteCancion();
 
                 if (cancion == null) {
-                    continue; // Si es null, pasa al siguiente usuario
+                    continue;  // Saltar usuarios sin canciones y si ya se ha añadido la canción a la playlist
                 }
 
+                cancionesVisitadas++;
                 int nuevaDuracion = tiempoAcumulado + cancion.getDuracion();
+
                 if (nuevaDuracion <= tiempoMaximoSegundos) {
                     canciones.add(cancion);
                     tiempoAcumulado = nuevaDuracion;
-                } else {
-                    return;
                 }
             }
+
         }
     }
 

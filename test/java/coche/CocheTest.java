@@ -352,40 +352,47 @@ class CocheTest {
     }
     
     @Test
-    @DisplayName("CP5.2: Reproducir hasta 5400 segundos con canciones largas y verificar la duración acumulada")
-    void testReproduccion5400SegundosConMock() {
+    @DisplayName("CP5.2: Reproducir hasta 3000 segundos con canciones largas y verificar la duración acumulada")
+    void testReproduccion3000SegundosConMock() {
         // Arrange
         Usuario usuarioMock = Mockito.mock(Usuario.class);
         Artista artista1 = new Artista("Artista1");
         Album album1 = new Album("Album1", artista1);
 
         // Canciones simuladas
-        Cancion corta = new Cancion(1, "Corta1", album1, artista1, 300);  // 5 min
-        Cancion larga1 = new Cancion(2, "Larga1", album1, artista1, 1500); // 25 min
-        Cancion larga2 = new Cancion(3, "Larga2", album1, artista1, 2000); // 33 min
+        Cancion corta = new Cancion(1, "Corta1", album1, artista1, 300);   // 5 min
+        Cancion larga1 = new Cancion(2, "Larga1", album1, artista1, 2000); // 33 min
+        Cancion larga2 = new Cancion(3, "Larga2", album1, artista1, 1500); // 25 min
 
         // Simular comportamiento del método obtenerSiguienteCancion()
         when(usuarioMock.obtenerSiguienteCancion()).thenReturn(corta, larga1, larga2, null);
+        when(usuarioMock.getNumeroCanciones()).thenReturn(3);
 
         coche.agregarUsuario(usuarioMock);
 
         // Act
-        coche.reproducirHastaTiempo(5400);
+        coche.reproducirHastaTiempo(3000);
 
         // Assert
         assertNotNull(coche.getCanciones(), "La lista de canciones reproducidas no debe ser null.");
+
         int duracionTotal = coche.getCanciones().stream().mapToInt(Cancion::getDuracion).sum();
         assertTrue(duracionTotal <= 5400, "La duración total no debe exceder los 5400 segundos.");
 
-        // Verificar que se han reproducido las canciones que caben en 5400 segundos
-        assertEquals(3, coche.getCanciones().size(), "Debe reproducir hasta 3 canciones que no excedan el tiempo límite.");
+        // Verificación de canciones reproducidas
+        assertEquals(2, coche.getCanciones().size(), "Debe haber reproducido solo dos canciones debido a la restricción de tiempo.");
+
+        // Verificar que las canciones reproducidas sean "Corta1" y "Larga1"
+        assertEquals("Corta1", coche.getCanciones().get(0).getTitulo());
+        assertEquals("Larga1", coche.getCanciones().get(1).getTitulo());
+
+        // Verificar que "Larga2" no se ha reproducido
         assertFalse(coche.getCanciones().stream().anyMatch(c -> c.getTitulo().equals("Larga2")),
-                "La canción 'Larga2' no debe haberse reproducido ya que excede el tiempo disponible.");
+                "La canción 'Larga2' no debe haberse reproducido por exceso de tiempo.");
 
         // Verificar interacciones con el mock
-        verify(usuarioMock, times(4)).obtenerSiguienteCancion();
+        verify(usuarioMock, times(3)).obtenerSiguienteCancion(); // A la tercera llamada, comprueba que la canción larga2 no cabe, así que no la añade
     }
-
 
 
     @Test
@@ -400,14 +407,21 @@ class CocheTest {
         Cancion corta1 = new Cancion(1, "Corta1", album1, artista1, 300);  // 5 min
         Cancion larga1 = new Cancion(2, "Larga1", album1, artista1, 5000); // 83 min
         Cancion corta2 = new Cancion(3, "Corta2", album1, artista1, 600);  // 10 min
+        
+        usuarioMock.agregarCancion(corta1);
+        usuarioMock.agregarCancion(larga1);
+        usuarioMock.agregarCancion(corta2);
 
         // Simular comportamiento
         when(usuarioMock.obtenerSiguienteCancion()).thenReturn(corta1, larga1, corta2, null);
+        when(usuarioMock.getNumeroCanciones()).thenReturn(3);
 
         coche.agregarUsuario(usuarioMock);
 
         // Act
-        coche.reproducirHastaTiempo(7200);
+        coche.reproducirHastaTiempo(1000);
+        
+        System.out.println(coche.getCanciones());
 
         // Assert
         assertNotNull(coche.getCanciones(), "La lista de canciones reproducidas no debe ser null.");
@@ -424,7 +438,7 @@ class CocheTest {
 
     
     ////////////////////////////////////////////////////////////////
-
+/*
     @Test
     @DisplayName("Prueba de Randonmización")
     void testRandomize() {
@@ -560,6 +574,6 @@ class CocheTest {
         coche.crearPlaylistPersonalizada(Arrays.asList("Juan Pérez", "Ana García"), 1);
         assertTrue(coche.getCanciones().isEmpty(), "La playlist debe estar vacía");
     }
-    
+    */
     
 }

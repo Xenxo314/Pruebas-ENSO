@@ -95,6 +95,17 @@ public class Usuario {
         return null;
     }
 	
+	public int getNumeroCanciones() {
+	    int totalCanciones = 0;
+
+	    for (Album album : listaAlbumes) {
+	        totalCanciones += album.getListaCanciones().size();
+	    }
+
+	    return totalCanciones;
+	}
+
+	
 	public void agregarAlbum(Album album) {
         listaAlbumes.add(album);
     }
