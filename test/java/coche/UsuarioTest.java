@@ -4,11 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class UsuarioTest {
 	
 	private Usuario usuario;
+    private Artista artista1, artista2;
+    private Album album1, album2;
 
 	@AfterAll
 	static void tearDownAfterClass() throws Exception {
@@ -16,44 +19,101 @@ class UsuarioTest {
 
 	@BeforeEach
 	void setUp() throws Exception {
-		usuario = new Usuario("Juan", "Pérez");
-		
-		Artista artista1 = new Artista("Artista1");
-	    Artista artista2 = new Artista("Artista2");
-	    
-	    Album album1 = new Album("Album1", artista1);
-	    Album album2 = new Album("Album2", artista2);
-	    
-	    // Añadir canciones de dos álbumes
+		usuario = new Usuario("Juan", "Pérez");        
+	}
+	
+	void init1album() {
+		artista1 = new Artista("Artista1");
+        album1 = new Album("Album1", artista1);
+        
+		usuario.agregarAlbum(album1);
+        usuario.agregarCancion(new Cancion(1, "Cancion1", album1, artista1, 180));
+        usuario.agregarCancion(new Cancion(2, "Cancion2", album1, artista1, 200));
+	}
+	
+	void init2albums() {
+		artista1 = new Artista("Artista1");
+        artista2 = new Artista("Artista2");
+
+        album1 = new Album("Album1", artista1);
+        album2 = new Album("Album2", artista2);
+
         usuario.agregarAlbum(album1);
         usuario.agregarCancion(new Cancion(1, "Cancion1", album1, artista1, 180));
         usuario.agregarCancion(new Cancion(2, "Cancion2", album1, artista1, 200));
-        
+
         usuario.agregarAlbum(album2);
-        usuario.agregarCancion(new Cancion(3, "Cancion3", album2, artista2, 240));
-        usuario.agregarCancion(new Cancion(3, "Cancion4", album2, artista2, 220));
-	    
-
-        
+        usuario.agregarCancion(new Cancion(3, "Cancion3", album2, artista2, 220));
+        usuario.agregarCancion(new Cancion(4, "Cancion4", album2, artista2, 240));
 	}
-
+	
+	// HU3: Gestión de álbumes y canciones por usuario
 	@Test
-	void testObtenerSiguienteCancion() {
-        Cancion primera = usuario.obtenerSiguienteCancion();
-        assertEquals("Cancion1", primera.getTitulo());
+    @DisplayName("CP3.1: Reproducción ordenada de canciones en un único álbum")
+    void testReproduccionOrdenadaUnAlbum() {
+        // Arrange - Agregar un álbum con 2 canciones
+		init1album();
 
-        Cancion segunda = usuario.obtenerSiguienteCancion();
-        assertEquals("Cancion2", segunda.getTitulo());
+        // Act & Assert - Reproducir la primera canción
+        Cancion primeraCancion = usuario.obtenerSiguienteCancion();
+        assertNotNull(primeraCancion, "La primera canción no debe ser null.");
+        assertEquals("Cancion1", primeraCancion.getTitulo(), "Debe reproducir la primera canción en orden.");
 
-        Cancion tercera = usuario.obtenerSiguienteCancion();
-        assertEquals("Cancion3", tercera.getTitulo());
+        // Reproducir la segunda canción
+        Cancion segundaCancion = usuario.obtenerSiguienteCancion();
+        assertNotNull(segundaCancion, "La segunda canción no debe ser null.");
+        assertEquals("Cancion2", segundaCancion.getTitulo(), "Debe reproducir la segunda canción en orden.");
 
-        Cancion cuarta = usuario.obtenerSiguienteCancion();
-        assertEquals("Cancion4", cuarta.getTitulo());
+        // Verificar que vuelve al inicio del álbum tras reproducir todas las canciones
+        Cancion terceraCancion = usuario.obtenerSiguienteCancion();
+        assertEquals("Cancion1", terceraCancion.getTitulo(), "Debe volver a la primera canción del álbum en reproducción cíclica.");
 
-        // Debe volver a la primera canción del primer álbum
-        Cancion quinta = usuario.obtenerSiguienteCancion();
-        assertEquals("Cancion1", quinta.getTitulo());
+        // Verificar que solo hay un álbum y dos canciones
+        assertEquals(1, usuario.getListaAlbumes().size(), "Debe haber un único álbum.");
+        assertEquals(2, usuario.getListaAlbumes().get(0).getListaCanciones().size(), "Debe haber dos canciones en el álbum.");
+    }
+	
+	@Test
+    @DisplayName("CP3.2: Verificar ciclo de reproducción entre dos álbumes")
+    void testCicloEntreAlbums() {
+		
+		init2albums();
+		
+        // Reproducir las canciones del primer álbum
+        Cancion primeraCancion = usuario.obtenerSiguienteCancion();
+        assertEquals("Cancion1", primeraCancion.getTitulo(), "Debe reproducir la primera canción del primer álbum.");
+
+        Cancion segundaCancion = usuario.obtenerSiguienteCancion();
+        assertEquals("Cancion2", segundaCancion.getTitulo(), "Debe reproducir la segunda canción del primer álbum.");
+
+        // Reproducir las canciones del segundo álbum
+        Cancion terceraCancion = usuario.obtenerSiguienteCancion();
+        assertEquals("Cancion3", terceraCancion.getTitulo(), "Debe pasar al primer tema del segundo álbum.");
+
+        Cancion cuartaCancion = usuario.obtenerSiguienteCancion();
+        assertEquals("Cancion4", cuartaCancion.getTitulo(), "Debe reproducir la segunda canción del segundo álbum.");
+
+        // Reproducción cíclica: debe regresar al primer álbum
+        Cancion primeraCiclica = usuario.obtenerSiguienteCancion();
+        assertEquals("Cancion1", primeraCiclica.getTitulo(), "Debe volver a la primera canción del primer álbum.");
+    }
+	
+	@Test
+    @DisplayName("CP3.3: Intentar reproducir canciones cuando no hay álbumes agregados")
+    void testReproduccionSinAlbumes() {
+        // Act - Intentar reproducir sin álbumes
+        Cancion cancion = usuario.obtenerSiguienteCancion();
+
+        // Asserts
+        assertNull(cancion, "Debe retornar null cuando no hay álbumes ni canciones.");
+        assertThrows(IllegalStateException.class, () -> {
+            if (cancion == null) {
+                throw new IllegalStateException("No hay canciones para reproducir.");
+            }
+        }, "Debe lanzar IllegalStateException cuando no hay álbumes agregados.");
+
+        // Comprobación de lista vacía
+        assertEquals(0, usuario.getListaAlbumes().size(), "La lista de álbumes debe estar vacía.");
     }
 
 }

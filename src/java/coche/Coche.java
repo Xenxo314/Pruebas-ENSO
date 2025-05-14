@@ -54,56 +54,65 @@ public class Coche {
 	
 	// MÉTODOS
 	////////////////////////////////////////////////////////////////
-	public void leer_csv(String rutaArchivo) {
-        String linea;
-        String separador = ",";
-        
-        try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
-        	br.readLine(); // Primera línea del csv
-            while ((linea = br.readLine()) != null) {
-                String[] valores = linea.split(separador);
-                if (valores.length == 7) {
-                	int id = Integer.parseInt(valores[0]);
-                    String nombreUsuario = valores[1];
-                    String apellidoUsuario = valores[2];
-                    String nombreArtista = valores[3];
-                    String nombreAlbum = valores[4];
-                    String titulo = valores[5];
-                    String duracion = valores[6];
-                    
-                    String[] partes = duracion.split(":");
-                    int minutos = Integer.parseInt(partes[0]);
-                    int segundos = Integer.parseInt(partes[1]);
-                    int duracionEnSegundos = minutos * 60 + segundos;
-                    
-                    // Buscar o crear el usuario
-                    Usuario usuario = buscarUsuario(nombreUsuario, apellidoUsuario);
-                    if (usuario == null) {
-                        usuario = new Usuario(nombreUsuario, apellidoUsuario);
-                        agregarUsuario(usuario);
-                    }
-                    // Crear o buscar Artista
-                    Artista artista = new Artista(nombreArtista);
-                    
-                    // Crear o buscar Album
-                    Album album = usuario.buscarAlbum(nombreAlbum);
-                    if (album == null) {
-                    	album = new Album(nombreAlbum, artista);
-                        usuario.agregarAlbum(album);
-                    }
-                    
-                    // Crear canción
-                    Cancion cancion = new Cancion(id, titulo, album, artista, duracionEnSegundos);
-                    usuario.agregarCancion(cancion);
-                    
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (NumberFormatException e) {
-            System.err.println("Error al convertir la duración a un entero.");
-        }
-    }
+	public void leer_csv(String rutaArchivo) throws IOException, NumberFormatException {
+	    String linea;
+	    String separador = ",";
+
+	    try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
+	        br.readLine(); // Primera línea del csv
+	        while ((linea = br.readLine()) != null) {
+	            String[] valores = linea.split(separador);
+
+	            if (valores.length != 7) {
+	                throw new IOException("Formato incorrecto: se esperaban 7 campos por línea.");
+	            }
+
+	            try {
+	                int id = Integer.parseInt(valores[0]);
+	                String nombreUsuario = valores[1];
+	                String apellidoUsuario = valores[2];
+	                String nombreArtista = valores[3];
+	                String nombreAlbum = valores[4];
+	                String titulo = valores[5];
+	                String duracion = valores[6];
+
+	                String[] partes = duracion.split(":");
+	                if (partes.length != 2) {
+	                    throw new NumberFormatException("Formato de duración incorrecto: " + duracion);
+	                }
+
+	                int minutos = Integer.parseInt(partes[0]);
+	                int segundos = Integer.parseInt(partes[1]);
+	                int duracionEnSegundos = minutos * 60 + segundos;
+
+	                // Buscar o crear el usuario
+	                Usuario usuario = buscarUsuario(nombreUsuario, apellidoUsuario);
+	                if (usuario == null) {
+	                    usuario = new Usuario(nombreUsuario, apellidoUsuario);
+	                    agregarUsuario(usuario);
+	                }
+
+	                // Crear o buscar Artista
+	                Artista artista = new Artista(nombreArtista);
+
+	                // Crear o buscar Album
+	                Album album = usuario.buscarAlbum(nombreAlbum);
+	                if (album == null) {
+	                    album = new Album(nombreAlbum, artista);
+	                    usuario.agregarAlbum(album);
+	                }
+
+	                // Crear canción
+	                Cancion cancion = new Cancion(id, titulo, album, artista, duracionEnSegundos);
+	                usuario.agregarCancion(cancion);
+
+	            } catch (NumberFormatException e) {
+	                throw new NumberFormatException("Error al convertir un campo numérico o duración: " + e.getMessage());
+	            }
+	        }
+	    }
+	}
+
 	
  /**
  * Reproduce una canción de cada usuario de forma cíclica.
@@ -129,20 +138,26 @@ public class Coche {
      */
     public void reproducirHastaTiempo(int tiempoMaximoSegundos) {
         int tiempoAcumulado = 0;
-        
-        while (true) {
-        	for (Usuario usuario : pasajeros) {
+
+        while (tiempoAcumulado < tiempoMaximoSegundos) {
+            for (Usuario usuario : pasajeros) {
                 Cancion cancion = usuario.obtenerSiguienteCancion();
+
+                if (cancion == null) {
+                    continue; // Si es null, pasa al siguiente usuario
+                }
+
                 int nuevaDuracion = tiempoAcumulado + cancion.getDuracion();
-                if (cancion != null && nuevaDuracion < tiempoMaximoSegundos) {
+                if (nuevaDuracion <= tiempoMaximoSegundos) {
                     canciones.add(cancion);
                     tiempoAcumulado = nuevaDuracion;
+                } else {
+                    return;
                 }
-                else
-                	return;
             }
         }
     }
+
 
 	
     ////////////////////////////////////////////////////////////////
@@ -153,7 +168,13 @@ public class Coche {
 
     ////////////////////////////////////////////////////////////////
     
-	
+	public void randomizarArtista(Artista autor) {
+		
+		 // Filtrar canciones que no corresponden al artista
+	    canciones.removeIf(cancion -> !cancion.getArtista().equals(autor));
+	    
+		Collections.shuffle(canciones);
+	}
 	
 	////////////////////////////////////////////////////////////////
 	
