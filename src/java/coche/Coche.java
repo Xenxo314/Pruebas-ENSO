@@ -38,7 +38,7 @@ public class Coche {
 	}
 	
 	// MÉTODOS AUXILIARES
-	private Usuario buscarUsuario(String nombre, String apellido) {
+	public Usuario buscarUsuario(String nombre, String apellido) {
 	    for (Usuario usuario : pasajeros) {
 	        if (usuario.getNombre().equals(nombre) && usuario.getApellido().equals(apellido)) {
 	            return usuario;
@@ -147,8 +147,6 @@ public class Coche {
         	totalCanciones += pasajero.getNumeroCanciones();
         }
         
-        
-        System.out.println(totalCanciones);
         while (cancionesVisitadas < totalCanciones) {
 
             for (Usuario usuario : pasajeros) {

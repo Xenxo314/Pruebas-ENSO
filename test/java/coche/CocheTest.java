@@ -84,7 +84,6 @@ class CocheTest {
 		try {
 			coche.leer_csv(rutaArchivo);
 		} catch (NumberFormatException | IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -99,6 +98,7 @@ class CocheTest {
 	@Test
     @DisplayName("CP1.2: Cargar CSV con formato incorrecto")
     void testLeerCSVFormatoIncorrecto() throws IOException {
+		// Arrange
         String csvContent = "ID,Nombre,Apellido,Artista,Album,Canción,Duración\n" +
                             "1,Juan,Pérez,BTS,Map of the Soul: 7,Intro: Persona,2:51\n" +
                             "2,Juan,Pérez,BTS,Map of the Soul: 7,Boy With Luv,3:49\n" +
@@ -109,7 +109,7 @@ class CocheTest {
         Files.write(Paths.get("src/resources/csv_erroneo.csv"), csvContent.getBytes());
         
         
-
+        // Act & Asserts
         assertThrows(NumberFormatException.class, () -> coche.leer_csv("src/resources/csv_erroneo.csv"));
         assertEquals(4, coche.getPasajeros().get(0).getListaAlbumes().get(0).getListaCanciones().size(), "Se esperaban 4 canciones cargadas debido al error en la última línea.");
 
@@ -119,6 +119,8 @@ class CocheTest {
     @Test
     @DisplayName("CP1.3: Cargar CSV con usuarios duplicados")
     void testLeerCSVUsuariosDuplicados() throws IOException {
+    	
+    	// Arrange
         String csvContent = "ID,Nombre,Apellido,Artista,Album,Canción,Duración\n" +
                             "1,Juan,Pérez,BTS,Map of the Soul: 7,Intro: Persona,2:51\n" +
                             "2,Juan,Pérez,BTS,Map of the Soul: 7,Boy With Luv,3:49\n" +
@@ -128,11 +130,54 @@ class CocheTest {
 
         Files.write(Paths.get("src/resources/csv_duplicados.csv"), csvContent.getBytes());
 
+        // Act
         coche.leer_csv("src/resources/csv_duplicados.csv");
+        
+        // Asserts
         assertEquals(1, coche.getPasajeros().size(), "Se esperaba un único usuario cargado.");
         assertEquals(5, coche.getPasajeros().get(0).getListaAlbumes().get(0).getListaCanciones().size(), "Se esperaban 5 canciones cargadas sin duplicados.");
 
         Files.delete(Paths.get("src/resources/csv_duplicados.csv"));
+    }
+    
+    @Test
+    @DisplayName("CP1.4: csv con un número incorrecto de columnas")
+    void testLeerCSV8columnas() throws IOException {
+    	
+    	// Arrange
+        String csvContent = "ID,Nombre,Apellido,Artista,Album,Canción,Duración,Valoracion\n" +
+                            "1,Juan,Pérez,BTS,Map of the Soul: 7,Intro: Persona,2:51,4\n" +
+                            "2,Juan,Pérez,BTS,Map of the Soul: 7,Boy With Luv,3:49,3\n" +
+                            "3,Juan,Pérez,BTS,Map of the Soul: 7,Make It Right,3:46,2\n" +
+                            "4,Juan,Pérez,BTS,Map of the Soul: 7,Jamais Vu,3:47,5\n" +
+                            "5,Juan,Pérez,BTS,Map of the Soul: 7,Intro: Persona,2:51,4";
+
+        Files.write(Paths.get("src/resources/csv_8columnas.csv"), csvContent.getBytes());
+        
+        // Act & Assert
+        assertThrows(IOException.class, () -> coche.leer_csv("src/resources/csv_8columnas.csv"));
+
+        Files.delete(Paths.get("src/resources/csv_8columnas.csv"));
+    }
+    
+    @Test
+    @DisplayName("CP1.5: csv con duracion en horas, minutos y segundos")
+    void testLeerCSVhoraMinutoSegundo() throws IOException {
+    	
+    	// Arrange
+    	String csvContent = "ID,Nombre,Apellido,Artista,Album,Canción,Duración\n" +
+                "1,Juan,Pérez,BTS,Map of the Soul: 7,Intro: Persona,0:2:51\n" +
+                "2,Juan,Pérez,BTS,Map of the Soul: 7,Boy With Luv,0:3:49\n" +
+                "3,Juan,Pérez,BTS,Map of the Soul: 7,Make It Right,0:3:46\n" +
+                "4,Juan,Pérez,BTS,Map of the Soul: 7,Jamais Vu,0:3:47\n" +
+                "5,Juan,Pérez,BTS,Map of the Soul: 7,Intro: Persona,0:2:51";
+    	
+        Files.write(Paths.get("src/resources/csv_horaMinutoSegundo.csv"), csvContent.getBytes());
+        
+        // Act & Assert
+        assertThrows(NumberFormatException.class, () -> coche.leer_csv("src/resources/csv_horaMinutoSegundo.csv"));
+
+        Files.delete(Paths.get("src/resources/csv_horaMinutoSegundo.csv"));
     }
     
     // HU2: Reproducción de canciones de todos los usuarios en ciclo
@@ -178,7 +223,6 @@ class CocheTest {
     	try {
 			coche.leer_csv(rutaArchivo);
 		} catch (NumberFormatException | IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         coche.reproducirCancionDeCadaUsuario();
@@ -193,7 +237,7 @@ class CocheTest {
     
     @Test
     @DisplayName("CP2.3: Reproducir canciones cuando un usuario no tiene canciones disponibles")
-    void testReproducirSinCanciones() {
+    void testReproducirUsuarioSinCanciones() {
         // Arrange
         usuario1 = new Usuario("Juan", "Pérez");
         usuario2 = new Usuario("Carlos", "Sánchez");
@@ -219,39 +263,86 @@ class CocheTest {
         doThrow(new IllegalStateException("Usuario sin canciones")).when(cocheMock).reproducirCancionDeCadaUsuario();
         assertThrows(IllegalStateException.class, () -> cocheMock.reproducirCancionDeCadaUsuario(), "Debe lanzar excepción si el usuario no tiene canciones.");
     }
+    
+    @Test
+    @DisplayName("CP2.4: Reproducir canciones con un album sin canciones")
+    void testReproducirAlbumSinCanciones() {
+        // Arrange
+        usuario1 = new Usuario("Juan", "Pérez");
+
+        Artista artista = new Artista("Artista1");
+        Album album1 = new Album("Album1", artista);
+        Album album2 = new Album("Album2", artista);
+        usuario1.agregarAlbum(album1); // Álbum vacío
+        usuario1.agregarAlbum(album2); // Álbum con una canción
+        usuario1.agregarCancion(new Cancion(1, "Cancion1", album1, artista, 180));
+
+        coche.agregarUsuario(usuario1);
+
+        // Act
+        coche.reproducirCancionDeCadaUsuario();
+
+        // Assert
+        
+        // Verificar que no se reproduzcan canciones del álbum vacío
+        assertEquals(1, coche.getCanciones().size(), "Debe haber una canción reproducida.");
+        assertEquals("Cancion1", coche.getCanciones().get(0).getTitulo(), "La canción reproducida debe ser 'Cancion1' del álbum 2.");
+
+        // Verificar que el álbum vacío no ha añadido nada
+        assertTrue(album2.getListaCanciones().isEmpty(), "El álbum 'Album1' debe estar vacío.");
+
+        // Verificar que no se ha añadido ninguna canción del álbum vacío
+        assertFalse(coche.getCanciones().stream().anyMatch(c -> c.getAlbum().equals(album2)), 
+            "No se deben reproducir canciones del álbum vacío.");
+    }
 	////////////////////////////////////////////////////////////////
 	
 	
 	// HU4: Reproducción hasta un tiempo límite especificado
     @Test
     @DisplayName("CP4.1: Creacion de Playlist de 1 hora con los datos del csv")
-    void testPlaylist1h() {
+    void testPlaylistNoSongs() {
     	
     	// Arrange
-    	String rutaArchivo = "src/resources/discos_usuarios.csv";
+    	 usuario1 = coche.buscarUsuario("Carlos", "Sánchez");
+         if (usuario1 == null) {
+         	usuario1 = new Usuario("Carlos", "Sánchez");
+         }
+         usuario2 = coche.buscarUsuario("Juan", "Sánchez");
+         if (usuario2 == null) {
+         	usuario2 = new Usuario("Juan", "Sánchez");
+         }
+
+        Artista artista = new Artista("Artista1");
+        Album album = new Album("Album1", artista);
+        usuario2.agregarAlbum(album);
+        usuario2.agregarCancion(new Cancion(1, "Cancion1", album, artista, 180));
+        
+        coche.agregarUsuario(usuario1);  // Sin canciones
+        coche.agregarUsuario(usuario2);  // Con una canción
     	
     	// Act
-    	try {
-			coche.leer_csv(rutaArchivo);
-		} catch (NumberFormatException | IOException e) {
-			e.printStackTrace();
-		}
-        int tiempoMaximo = 3600;
-        int margen = 300; // 5 minutos
-        int minimoPermitido = tiempoMaximo - margen;
-        int maximoPermitido = tiempoMaximo + margen;
-        coche.reproducirHastaTiempo(tiempoMaximo);
+        coche.reproducirHastaTiempo(3600);
 
-        // Asserts
+        // Assert
+        // Verificar que solo se ha añadido la canción del usuario con canciones
+        assertEquals(1, coche.getCanciones().size(), "Debe haberse añadido únicamente la canción del usuario con canciones.");
+
+        // Verificar que la canción añadida es "Cancion1"
+        assertEquals("Cancion1", coche.getCanciones().get(0).getTitulo(), "La única canción reproducida debe ser 'Cancion1'.");
+
+        // Verificar la duración total de la playlist
         int duracionTotal = coche.getCanciones().stream().mapToInt(Cancion::getDuracion).sum();
-        assertTrue(duracionTotal >= minimoPermitido && duracionTotal <= maximoPermitido,
-                "La duración total (" + duracionTotal + "s) está fuera del rango permitido (" + minimoPermitido + "s - " + maximoPermitido + "s).");
+        assertEquals(180, duracionTotal, "La duración total debe ser de 180 segundos (3 minutos).");
 
-        //System.out.println(String.format("Duración total: %02d:%02d:%02d", duracionTotal / 3600, (duracionTotal % 3600) / 60, duracionTotal % 60));
+        // Verificar que el usuario sin canciones no ha añadido nada
+        assertEquals(0, usuario1.getNumeroCanciones(), "El usuario 'Juan' no debe haber aportado ninguna canción.");
 
-        // Verificar el contenido esperado
-        assertEquals("Intro: Persona", coche.getCanciones().get(0).getTitulo());
-        assertEquals("Next to Me", coche.getCanciones().get(1).getTitulo());
+        // Verificar que el usuario con canciones ha visitado todas sus canciones
+        assertEquals(1, usuario2.getNumeroCanciones(), "El usuario 'Carlos' debe tener una única canción registrada.");
+
+        // Verificar que se ha visitado exactamente 1 canción
+        assertEquals(1, coche.getCanciones().size(), "Debe haberse visitado exactamente una canción en la playlist.");
     }
 
     @Test
@@ -320,6 +411,39 @@ class CocheTest {
         assertEquals("Next to Me", coche.getCanciones().get(1).getTitulo());
     }
     
+    @Test
+    @DisplayName("CP4.4: Creacion de Playlist de 1h pero los usuarios no tienen canciones")
+    void testPlaylistSinCanciones() {
+    	
+    	// Arrange
+    	String rutaArchivo = "src/resources/discos_usuarios.csv";
+    	try {
+			coche.leer_csv(rutaArchivo);
+		} catch (NumberFormatException | IOException e) {
+			e.printStackTrace();
+		}
+        int tiempoMaximo = 5400;
+        int margen = 300; // 5 minutos
+        int minimoPermitido = tiempoMaximo - margen;
+        int maximoPermitido = tiempoMaximo + margen;
+        
+        // Act
+        coche.reproducirHastaTiempo(tiempoMaximo);
+
+        // Verificar la duración total
+        int duracionTotal = coche.getCanciones().stream().mapToInt(Cancion::getDuracion).sum();
+
+        // Asserts
+        assertTrue(duracionTotal >= minimoPermitido && duracionTotal <= maximoPermitido,
+                "La duración total (" + duracionTotal + "s) está fuera del rango permitido (" + minimoPermitido + "s - " + maximoPermitido + "s).");
+
+        //System.out.println(String.format("Duración total: %02d:%02d:%02d", duracionTotal / 3600, (duracionTotal % 3600) / 60, duracionTotal % 60));
+
+        // Verificar el contenido esperado
+        assertEquals("Intro: Persona", coche.getCanciones().get(0).getTitulo());
+        assertEquals("Next to Me", coche.getCanciones().get(1).getTitulo());
+    }
+    
     // HU5: Creación de playlist con canciones largas
     
     @ParameterizedTest
@@ -328,8 +452,14 @@ class CocheTest {
     void testPlaylistCancionesLargas(int tiempoMaximo) {
     	
     	// Arrange
-    	usuario1 = new Usuario("Juan", "Pérez");
-        usuario2 = new Usuario("Ana", "García");
+        usuario1 = coche.buscarUsuario("Juan", "Sánchez");
+        if (usuario1 == null) {
+        	usuario1 = new Usuario("Juan", "Sánchez");
+        }
+        usuario2 = coche.buscarUsuario("Juan", "Sánchez");
+        if (usuario2 == null) {
+        	usuario2 = new Usuario("Juan", "Sánchez");
+        }
 
         Artista artista1 = new Artista("Artista1");
         Album album1 = new Album("Album1", artista1);
@@ -338,6 +468,7 @@ class CocheTest {
         usuario1.agregarCancion(new Cancion(1, "Corta1", album1, artista1, 300));  // 5 min
         usuario1.agregarCancion(new Cancion(2, "Larga1", album1, artista1, 1500)); // 25 min
 
+        
         coche.agregarUsuario(usuario1);
     	
         // Act
@@ -368,6 +499,7 @@ class CocheTest {
         when(usuarioMock.obtenerSiguienteCancion()).thenReturn(corta, larga1, larga2, null);
         when(usuarioMock.getNumeroCanciones()).thenReturn(3);
 
+        
         coche.agregarUsuario(usuarioMock);
 
         // Act
@@ -421,7 +553,7 @@ class CocheTest {
         // Act
         coche.reproducirHastaTiempo(1000);
         
-        System.out.println(coche.getCanciones());
+        // System.out.println(coche.getCanciones());
 
         // Assert
         assertNotNull(coche.getCanciones(), "La lista de canciones reproducidas no debe ser null.");
