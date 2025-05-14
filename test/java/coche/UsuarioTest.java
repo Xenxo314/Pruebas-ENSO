@@ -115,5 +115,81 @@ class UsuarioTest {
         // Comprobación de lista vacía
         assertEquals(0, usuario.getListaAlbumes().size(), "La lista de álbumes debe estar vacía.");
     }
+	
+	@Test
+	@DisplayName("CP3.4: Alcanzar el bloque de código de avance al siguiente álbum vacío")
+	void testObtenerSiguienteCancion_AlbumVacio() {
+	    // Arrange - Crear artista
+	    Artista artista = new Artista("Artista1");
+
+	    // Crear álbumes
+	    Album albumVacio = new Album("Álbum Vacío", artista);
+	    Album albumConCanciones = new Album("Álbum con Canciones", artista);
+
+	    // Crear canciones
+	    Cancion cancion1 = new Cancion(1, "Cancion 1", albumConCanciones, artista, 120);
+	    Cancion cancion2 = new Cancion(2, "Cancion 2", albumConCanciones, artista, 150);
+
+	    // Crear usuario y agregar álbumes
+	    Usuario usuario = new Usuario("Juan", "Pérez");
+	    usuario.agregarAlbum(albumVacio);      // Álbum vacío primero
+	    usuario.agregarAlbum(albumConCanciones);  // Álbum con canciones después
+
+	    // Agregar canciones al segundo álbum
+	    usuario.agregarCancion(cancion1);
+	    usuario.agregarCancion(cancion2);
+
+	    // Act - Obtener la siguiente canción (esto debe pasar por el álbum vacío)
+	    Cancion siguienteCancion = usuario.obtenerSiguienteCancion();
+
+	    // Assert
+	    assertNotNull(siguienteCancion, "La canción no debe ser nula.");
+	    assertEquals("Cancion 1", siguienteCancion.getTitulo(), "La primera canción reproducida debe ser 'Cancion 1'.");
+
+	    // Obtener la siguiente canción para comprobar el ciclo
+	    siguienteCancion = usuario.obtenerSiguienteCancion();
+	    assertEquals("Cancion 2", siguienteCancion.getTitulo(), "La segunda canción reproducida debe ser 'Cancion 2'.");
+	}
+	
+	@Test
+	@DisplayName("CP3.5: Recorrer todos los álbumes hasta reiniciar al primer álbum")
+	void testRecorrerTodosLosAlbumes_ReiniciarAlPrimerAlbum() {
+	    // Arrange - Crear artista
+	    Artista artista = new Artista("Artista1");
+
+	    // Crear álbumes
+	    Album album1 = new Album("Álbum 1", artista);
+	    Album album2 = new Album("Álbum 2", artista);
+	    Album album3 = new Album("Álbum 3", artista); // Vacio
+
+	    // Crear canciones
+	    Cancion cancion1 = new Cancion(1, "Cancion 1", album1, artista, 120); // Álbum 1
+	    Cancion cancion2 = new Cancion(2, "Cancion 2", album2, artista, 150); // Álbum 2
+
+	    // Crear usuario y agregar álbumes y canciones
+	    Usuario usuario = new Usuario("Juan", "Pérez");
+	    usuario.agregarAlbum(album1);
+	    usuario.agregarAlbum(album2);
+	    usuario.agregarAlbum(album3);
+
+	    usuario.agregarCancion(cancion1); // Álbum 1
+	    usuario.agregarCancion(cancion2); // Álbum 2
+
+	    // Act - Reproducir todas las canciones para recorrer todos los álbumes
+	    Cancion primeraCancion = usuario.obtenerSiguienteCancion();
+	    Cancion segundaCancion = usuario.obtenerSiguienteCancion();
+
+	    // Assert - Verificar que hemos recorrido todos los álbumes
+	    assertEquals("Cancion 1", primeraCancion.getTitulo(), "La primera canción debe ser del primer álbum.");
+	    assertEquals("Cancion 2", segundaCancion.getTitulo(), "La segunda canción debe ser del segundo álbum.");
+
+	    // Act - Volver a iniciar el ciclo de reproducción
+	    Cancion siguienteCancion = usuario.obtenerSiguienteCancion();
+
+	    // Assert - Verificar que hemos reiniciado al primer álbum
+	    assertEquals("Cancion 1", siguienteCancion.getTitulo(), "Debe reiniciarse al primer álbum y reproducir 'Cancion 1'.");
+	}
+
+
 
 }

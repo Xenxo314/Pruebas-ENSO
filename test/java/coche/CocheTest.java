@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,9 +15,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.*;
 
 
@@ -24,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
@@ -569,111 +574,307 @@ class CocheTest {
     }
 
     
-    ////////////////////////////////////////////////////////////////
-/*
-    @Test
-    @DisplayName("Prueba de Randonmización")
-    void testRandomize() {
-    	
-    	// Arrange
-    	String rutaArchivo = "src/resources/discos_usuarios.csv";
-    	try {
-			coche.leer_csv(rutaArchivo);
-		} catch (NumberFormatException | IOException e) {
-			e.printStackTrace();
-		}
-    	
-    	// Act
-    	coche.reproducirHastaTiempo(1000); // Crear una playlist
-    	coche.randomizarPlayList();
-    	ArrayList<Cancion> c1 = new ArrayList<Cancion>(coche.getCanciones());
-    	coche.randomizarPlayList();
-    	ArrayList<Cancion> c2 = new ArrayList<Cancion>(coche.getCanciones());
-  
-    	
-    	assertNotEquals(c1,c2,"Las listas deberían ser distintas");
-    	
-    	
-    }
+    //////////////////////////////////////////////////////////////// Funcionalidad: Randomizar Playlist
     
-    ////////////////////////////////////////////////////////////////
-
+    // HU6: Mezclar Playlist con Canciones
+    
     @Test
-    @DisplayName("Randomizar canciones por artista desde CSV")
-    void randomizarArtistaDesdeCSV() {
-        // Ruta del archivo CSV
+    @DisplayName("CP6.1: Randomizar una playlist con varias canciones")
+    void testRandomizarVariasCanciones() {
+        // Arrange - Cargar canciones desde el CSV
         String rutaArchivo = "src/resources/discos_usuarios.csv";
-
-        // Cargar las canciones desde el CSV
         try {
 			coche.leer_csv(rutaArchivo);
 		} catch (NumberFormatException | IOException e) {
 			e.printStackTrace();
 		}
-        coche.reproducirHastaTiempo(3000);
+        coche.reproducirHastaTiempo(3600);  // Reproducir hasta 1 hora para generar una playlist
 
-        // Verificar que el coche tenga canciones cargadas
-        assertFalse(coche.getCanciones().isEmpty(), "El coche debe tener canciones después de cargar el CSV");
+        // Obtener el estado inicial de la playlist
+        List<Cancion> cancionesOriginal = new ArrayList<>(coche.getCanciones());
 
-        // Obtener el artista desde las canciones cargadas
-        Artista artista1 = coche.getCanciones().get(0).getArtista();
+        // Act
+        coche.randomizarPlayList();
 
-        // Ejecutar el método a probar
-        coche.randomizarArtista(artista1);
+        // Assert - Verificar que el tamaño de la lista no ha cambiado
+        assertEquals(cancionesOriginal.size(), coche.getCanciones().size(), "El tamaño de la playlist no debe cambiar tras la mezcla.");
 
-        // Verificar que todas las canciones sean del artista especificado
-        assertTrue(coche.getCanciones().stream().allMatch(c -> c.getArtista().equals(artista1)),
-                "Todas las canciones deben pertenecer al artista seleccionado");
+        // Verificar que las canciones siguen siendo las mismas (sin duplicados ni pérdidas)
+        assertTrue(coche.getCanciones().containsAll(cancionesOriginal), "Todas las canciones deben estar presentes tras la mezcla.");
+
+        // Verificar que el orden ha cambiado
+        assertNotEquals(cancionesOriginal, coche.getCanciones(), "El orden de las canciones debe cambiar tras la mezcla.");
     }
 
     @Test
-    @DisplayName("Randomizar artista con lista vacía")
-    void randomizarArtistaListaVacia() {
-        // Crear una instancia real del coche y convertirlo en Spy
-        Coche cocheReal = new Coche();
-        Coche coche = Mockito.spy(cocheReal);
+    @DisplayName("CP6.2: Randomizar una playlist con una única canción")
+    void testRandomizarUnaCancion() {
+        // Arrange - Crear usuario y agregar una única canción
+        Usuario usuario = new Usuario("Juan", "Pérez");
+        Artista artista = new Artista("Artista1");
+        Album album = new Album("Album1", artista);
+        usuario.agregarAlbum(album);
+        Cancion cancionUnica = new Cancion(1, "Unica", album, artista, 180);
+        usuario.agregarCancion(cancionUnica);
 
-        // Crear un artista
-        Artista artista = new Artista("Artista Desconocido");
+        coche.agregarUsuario(usuario);
+        coche.reproducirHastaTiempo(180);  // Reproducir hasta 3 minutos
 
-        // Ejecutar el método con lista vacía
-        coche.randomizarArtista(artista);
+        // Obtener el estado inicial de la playlist
+        List<Cancion> cancionesOriginal = new ArrayList<>(coche.getCanciones());
 
-        // Verificar que la lista siga vacía
-        assertTrue(coche.getCanciones().isEmpty(), "La lista debe permanecer vacía");
+        // Act
+        coche.randomizarPlayList();
+
+        // Assert - Verificar que el tamaño de la lista no ha cambiado
+        assertEquals(1, coche.getCanciones().size(), "La playlist debe contener una única canción.");
+
+        // Verificar que la única canción es la misma antes y después de la mezcla
+        assertEquals(cancionesOriginal, coche.getCanciones(), "La única canción debe permanecer en la misma posición.");
     }
 
     @Test
-    @DisplayName("Randomizar artista inexistente")
-    void randomizarArtistaInexistente() {
-        // Crear una instancia real del coche y convertirlo en Spy
-        Coche cocheReal = new Coche();
-        Coche coche = Mockito.spy(cocheReal);
+    @DisplayName("CP6.3: Randomizar una playlist vacía")
+    void testRandomizarPlaylistVacia() {
+        // Arrange - No cargar canciones, playlist vacía
 
-        // Ruta del archivo CSV
-        String rutaArchivo = "src/resources/discos_usuarios.csv";
+        // Act
+        coche.randomizarPlayList();
 
-        // Cargar las canciones desde el CSV
-        coche.leer_csv(rutaArchivo);
-
-        // Crear un artista que no está en el CSV
-        Artista artista = new Artista("Artista Inexistente");
-
-        // Ejecutar el método
-        coche.randomizarArtista(artista);
-
-        // Verificar que la lista esté vacía tras el filtrado
-        assertTrue(coche.getCanciones().isEmpty(), "La lista debe estar vacía al no haber coincidencias");
+        // Assert - Verificar que la lista sigue vacía
+        assertTrue(coche.getCanciones().isEmpty(), "La playlist debe permanecer vacía tras la mezcla.");
     }
     
-    ////////////////////////////////////////////////////////////////
+    // HU7: Verificar Integridad del Contenido tras la Mezcla
+
+    @Test
+    @DisplayName("CP7.1: Verificar integridad tras mezclar una playlist con varias canciones")
+    void testIntegridadTrasMezclar() {
+        // Arrange - Cargar canciones desde el CSV
+        String rutaArchivo = "src/resources/discos_usuarios.csv";
+        try {
+			coche.leer_csv(rutaArchivo);
+		} catch (NumberFormatException | IOException e) {
+			e.printStackTrace();
+		}
+        coche.reproducirHastaTiempo(5400);  // Reproducir hasta 1.5 horas para una playlist grande
+
+        // Obtener una copia de la playlist original
+        List<Cancion> cancionesOriginal = new ArrayList<>(coche.getCanciones());
+
+        // Act
+        coche.randomizarPlayList();
+
+        // Assert - Verificar que el tamaño de la playlist no ha cambiado
+        assertEquals(cancionesOriginal.size(), coche.getCanciones().size(), "El tamaño de la playlist debe mantenerse tras la mezcla.");
+
+        // Verificar que todas las canciones originales están presentes tras la mezcla
+        assertTrue(coche.getCanciones().containsAll(cancionesOriginal), "Todas las canciones deben estar presentes tras la mezcla.");
+
+    }
+
+    @Test
+    @DisplayName("CP7.2: Verificar integridad tras mezclar una playlist vacía")
+    void testIntegridadPlaylistVacia() {
+        // Arrange - Playlist vacía
+
+        // Act
+        coche.randomizarPlayList();
+
+        // Assert - Verificar que la lista sigue vacía
+        assertTrue(coche.getCanciones().isEmpty(), "La playlist debe permanecer vacía tras la mezcla.");
+    }
+
+    
+    
+    //////////////////////////////////////////////////////////////// Funcionalidad: Randomizar por Artista con Shuffle
+    
+    // HU8: Filtrar y Mezclar Playlist por Artista
+    
+    @Test
+    @DisplayName("CP8.1: Filtrar y mezclar por artista presente en la playlist")
+    void testRandomizarArtistaDesdeCSV() {
+        // Arrange - Cargar canciones desde el CSV
+        String rutaArchivo = "src/resources/discos_usuarios.csv";
+
+        try {
+            coche.leer_csv(rutaArchivo);
+        } catch (NumberFormatException | IOException e) {
+            e.printStackTrace();
+        }
+
+        coche.reproducirHastaTiempo(3600);  // Reproducir hasta 1 hora para generar una playlist
+
+        // Verificar que se ha cargado la playlist
+        assertFalse(coche.getCanciones().isEmpty(), "La playlist debe contener canciones después de cargar el CSV");
+
+        // Seleccionar un artista presente en la playlist
+        Artista artistaSeleccionado = coche.getCanciones().get(0).getArtista();
+
+        // Obtener una copia del contenido filtrado esperado
+        List<Cancion> cancionesFiltradas = coche.getCanciones().stream()
+                                                .filter(c -> c.getArtista().equals(artistaSeleccionado))
+                                                .collect(Collectors.toList());
+
+        // Act - Filtrar y mezclar por artista
+        coche.randomizarArtista(artistaSeleccionado);
+
+        // Assert - Verificar que todas las canciones pertenecen al artista seleccionado
+        assertTrue(coche.getCanciones().stream().allMatch(c -> c.getArtista().equals(artistaSeleccionado)),
+                "Todas las canciones deben pertenecer al artista seleccionado.");
+
+        // Verificar que no hay canciones de otros artistas
+        assertEquals(cancionesFiltradas.size(), coche.getCanciones().size(), 
+                "La cantidad de canciones debe ser igual al número de canciones del artista.");
+
+        // Verificar que las canciones se han mezclado
+        assertNotEquals(cancionesFiltradas, coche.getCanciones(), "El orden de las canciones debe haber cambiado tras el shuffle.");
+    }
+    
+    @Test
+    @DisplayName("CP8.2: Filtrar y mezclar una playlist vacía")
+    void testRandomizarArtistaListaVacia() {
+        // Arrange - Crear un artista cualquiera
+        Artista artista = new Artista("Artista Desconocido");
+
+        // Act - Filtrar y mezclar en una lista vacía
+        coche.randomizarArtista(artista);
+
+        // Assert - La lista debe permanecer vacía
+        assertTrue(coche.getCanciones().isEmpty(), "La playlist debe permanecer vacía tras el filtrado.");
+    }
+
+    @Test
+    @DisplayName("CP8.3: Filtrar y mezclar por un artista inexistente")
+    void testRandomizarArtistaInexistente() {
+        // Arrange - Cargar canciones desde el CSV
+        String rutaArchivo = "src/resources/discos_usuarios.csv";
+
+        try {
+            coche.leer_csv(rutaArchivo);
+        } catch (NumberFormatException | IOException e) {
+            e.printStackTrace();
+        }
+
+        coche.reproducirHastaTiempo(3600);  // Reproducir hasta 1 hora para generar una playlist
+
+        // Crear un artista inexistente
+        Artista artistaInexistente = new Artista("Artista Fantasma");
+
+        // Act - Filtrar y mezclar
+        coche.randomizarArtista(artistaInexistente);
+
+        // Assert - La playlist debe quedar vacía
+        assertTrue(coche.getCanciones().isEmpty(), "La playlist debe quedar vacía al no haber coincidencias con el artista seleccionado.");
+    }
+    
+    // HU9: Verificar Integridad y Orden tras Filtrar y Mezclar
+    
+    @ParameterizedTest
+    @CsvSource({
+        "Artista1, 3",
+        "Artista2, 2",
+        "Artista3, 1"
+    })
+    @DisplayName("CP9.1: Verificar integridad y ausencia de duplicados tras mezclar con parámetros y Mock")
+    void testIntegridadTrasRandomizarArtistaMock(String nombreArtista, int cancionesEsperadas) {
+        // Arrange - Crear el Mock del coche
+        Coche cocheMock = Mockito.spy(new Coche());
+
+        Artista artista1 = new Artista("Artista1");
+        Artista artista2 = new Artista("Artista2");
+        Artista artista3 = new Artista("Artista3");
+
+        Album album1 = new Album("Album1", artista1);
+        Album album2 = new Album("Album2", artista2);
+        Album album3 = new Album("Album3", artista3);
+
+        // Crear canciones
+        Cancion cancion1 = new Cancion(1, "Cancion1", album1, artista1, 180);
+        Cancion cancion2 = new Cancion(2, "Cancion2", album1, artista1, 200);
+        Cancion cancion3 = new Cancion(3, "Cancion3", album1, artista1, 220);
+        Cancion cancion4 = new Cancion(4, "Cancion4", album2, artista2, 300);
+        Cancion cancion5 = new Cancion(5, "Cancion5", album2, artista2, 400);
+        Cancion cancion6 = new Cancion(6, "Cancion6", album3, artista3, 500);
+
+        // Añadir canciones al coche
+        cocheMock.getCanciones().addAll(List.of(cancion1, cancion2, cancion3, cancion4, cancion5, cancion6));
+
+        // Crear el artista seleccionado basado en el parámetro
+        Artista artistaSeleccionado = new Artista(nombreArtista);
+
+        // Act - Filtrar y mezclar por artista
+        cocheMock.randomizarArtista(artistaSeleccionado);
+
+        // Assert - Verificar que no hay duplicados
+        Set<Cancion> setCanciones = new HashSet<>(cocheMock.getCanciones());
+        assertEquals(setCanciones.size(), cocheMock.getCanciones().size(), "No debe haber duplicados tras el filtrado y mezcla.");
+
+        // Verificar que todas las canciones pertenecen al artista seleccionado
+        assertTrue(cocheMock.getCanciones().stream().allMatch(c -> c.getArtista().equals(artistaSeleccionado)),
+                   "Todas las canciones deben pertenecer al artista seleccionado.");
+
+        // Verificar el tamaño de la lista
+        assertEquals(cancionesEsperadas, cocheMock.getCanciones().size(), 
+                     "El número de canciones debe coincidir con las del artista seleccionado.");
+    }
+
+
+    @ParameterizedTest
+    @CsvSource({
+        "Artista1, 3",
+        "Artista2, 2",
+        "ArtistaInexistente, 0"
+    })
+    @DisplayName("CP9.2: Verificar cantidad de canciones tras filtrado por artista con parámetros y Mock")
+    void testCantidadFiltradaPorArtistaMock(String nombreArtista, int cancionesEsperadas) {
+        // Arrange - Crear el Mock del coche
+        Coche cocheMock = Mockito.spy(new Coche());
+
+        Artista artista1 = new Artista("Artista1");
+        Artista artista2 = new Artista("Artista2");
+        Artista artista3 = new Artista("Artista3");
+
+        Album album1 = new Album("Album1", artista1);
+        Album album2 = new Album("Album2", artista2);
+        Album album3 = new Album("Album3", artista3);
+
+        // Crear canciones
+        Cancion cancion1 = new Cancion(1, "Cancion1", album1, artista1, 180);
+        Cancion cancion2 = new Cancion(2, "Cancion2", album1, artista1, 200);
+        Cancion cancion3 = new Cancion(3, "Cancion3", album1, artista1, 220);
+        Cancion cancion4 = new Cancion(4, "Cancion4", album2, artista2, 300);
+        Cancion cancion5 = new Cancion(5, "Cancion5", album2, artista2, 400);
+        Cancion cancion6 = new Cancion(6, "Cancion6", album3, artista3, 500);
+
+        // Añadir canciones al coche
+        cocheMock.getCanciones().addAll(List.of(cancion1, cancion2, cancion3, cancion4, cancion5, cancion6));
+
+        // Crear el artista seleccionado basado en el parámetro
+        Artista artistaSeleccionado = new Artista(nombreArtista);
+
+        // Act - Filtrar y mezclar por artista
+        cocheMock.randomizarArtista(artistaSeleccionado);
+
+        // Assert - Verificar la cantidad de canciones tras el filtrado
+        assertEquals(cancionesEsperadas, cocheMock.getCanciones().size(), 
+                     "El número de canciones debe coincidir con las del artista seleccionado.");
+    }
+
+    
+    //////////////////////////////////////////////////////////////// Funcionalidad: Crear Playlist Personalizada por Usuarios y Duración
+    
     @Test
     @DisplayName("Playlist con canciones < 3 min")
     void playlistMenor3Min() {
     	
     	// Arrange
     	String rutaArchivo = "src/resources/discos_usuarios.csv";
-        coche.leer_csv(rutaArchivo);
+    	try {
+            coche.leer_csv(rutaArchivo);
+        } catch (NumberFormatException | IOException e) {
+            e.printStackTrace();
+        }
         
         // Act
         coche.crearPlaylistPersonalizada(Arrays.asList("Juan Pérez", "María López"), 3);
@@ -706,6 +907,451 @@ class CocheTest {
         coche.crearPlaylistPersonalizada(Arrays.asList("Juan Pérez", "Ana García"), 1);
         assertTrue(coche.getCanciones().isEmpty(), "La playlist debe estar vacía");
     }
-    */
     
+    // HU10: Crear Playlist Personalizada por Usuarios Específicos y Duración
+    
+    @ParameterizedTest
+    @CsvSource({
+        "Juan Pérez, 1",
+        "María López, 2",
+        "Carlos García, 1"
+    })
+    @DisplayName("CP10.1: Crear playlist personalizada para usuarios específicos con duración < 3 minutos")
+    void testPlaylistUsuariosDuracionMenor3Min(String usuario, int cancionesEsperadas) {
+        // Arrange - Cargar canciones desde el CSV
+        String rutaArchivo = "src/resources/discos_usuarios.csv";
+
+        try {
+            coche.leer_csv(rutaArchivo);
+        } catch (NumberFormatException | IOException e) {
+            e.printStackTrace();
+        }
+
+        // Act - Crear playlist personalizada
+        coche.crearPlaylistPersonalizada(Arrays.asList(usuario), 3);
+
+        // Assert
+        assertNotNull(coche.getCanciones(), "La playlist no debe ser nula.");
+        assertEquals(cancionesEsperadas, coche.getCanciones().size(), 
+                     "La cantidad de canciones debe coincidir con el número esperado para el usuario.");
+        
+        assertTrue(coche.getCanciones().stream().allMatch(c -> c.getDuracion() < 180),
+                   "Todas las canciones deben tener una duración menor a 3 minutos.");
+        
+        // Verificar que no haya duplicados
+        Set<Cancion> setCanciones = new HashSet<>(coche.getCanciones());
+        assertEquals(setCanciones.size(), coche.getCanciones().size(), "No debe haber duplicados tras la creación de la playlist.");
+    }
+
+    @Test
+    @DisplayName("CP10.2: Crear playlist para usuarios inexistentes")
+    void testPlaylistUsuariosInexistentes() {
+        // Arrange - Mockear el coche
+        Coche cocheMock = Mockito.spy(new Coche());
+
+        // Crear el usuario mock (inexistente en términos de álbumes/canciones)
+        Usuario usuarioMock = Mockito.mock(Usuario.class);
+
+        // Configurar el usuario mock
+        Mockito.when(usuarioMock.getNombre()).thenReturn("Carlos");
+        Mockito.when(usuarioMock.getApellido()).thenReturn("Fernández");
+        Mockito.when(usuarioMock.getListaAlbumes()).thenReturn(new ArrayList<>());  // Usuario sin álbumes
+
+        // Mockear el método buscarUsuario para devolver el usuario mock
+        Mockito.doReturn(usuarioMock).when(cocheMock).buscarUsuario("Carlos", "Fernández");
+
+        // Act - Crear playlist personalizada
+        cocheMock.crearPlaylistPersonalizada(Arrays.asList("Carlos Fernández"), 5);
+
+        // Assert - La playlist debe estar vacía ya que no tiene álbumes
+        assertTrue(cocheMock.getCanciones().isEmpty(), "La playlist debe estar vacía porque el usuario no tiene álbumes.");
+
+        // Verificar que `getListaAlbumes` fue llamado, pero no se añadieron canciones
+        Mockito.verify(usuarioMock).getListaAlbumes();
+    }
+
+    @Test
+    @DisplayName("CP10.3: Crear playlist sin usuarios seleccionados")
+    void testPlaylistSinUsuarios() {
+        // Arrange - Cargar canciones desde el CSV
+        String rutaArchivo = "src/resources/discos_usuarios.csv";
+        
+        try {
+            coche.leer_csv(rutaArchivo);
+        } catch (NumberFormatException | IOException e) {
+            e.printStackTrace();
+        }
+
+        // Act & Assert
+        assertTimeout(Duration.ofSeconds(1), () -> {
+            coche.crearPlaylistPersonalizada(new ArrayList<>(), 5);
+        }, "La operación no debe exceder el tiempo límite.");
+
+        assertTrue(coche.getCanciones().isEmpty(), "La playlist debe estar vacía porque no se seleccionaron usuarios.");
+    }
+
+    
+    @Test
+    @DisplayName("CP10.4: Crear playlist con duración máxima de 1 minuto")
+    void testPlaylistDuracionBaja() {
+        // Arrange - Mockear el coche
+        Coche cocheMock = Mockito.spy(new Coche());
+
+        // Crear artista
+        Artista artista = new Artista("Artista1");
+
+        // Crear álbum como mock
+        Album albumMock = Mockito.mock(Album.class);
+
+        // Crear canciones
+        Cancion cancion1 = new Cancion(1, "Cancion Larga", albumMock, artista, 300);  // 5 minutos
+        Cancion cancion2 = new Cancion(2, "Cancion Corta", albumMock, artista, 50);   // 50 segundos
+
+        // Crear usuario mock
+        Usuario usuarioMock = Mockito.mock(Usuario.class);
+
+        // Configurar el usuario mock
+        Mockito.when(usuarioMock.getNombre()).thenReturn("Juan");
+        Mockito.when(usuarioMock.getApellido()).thenReturn("Pérez");
+        Mockito.when(usuarioMock.getListaAlbumes()).thenReturn(List.of(albumMock));
+
+        // Mockear el método `buscarUsuario()` para devolver el usuario mock
+        Mockito.doReturn(usuarioMock).when(cocheMock).buscarUsuario("Juan", "Pérez");
+
+        // Configurar las canciones en el álbum mock
+        Mockito.when(albumMock.getListaCanciones()).thenReturn(List.of(cancion1, cancion2));
+
+        // Act - Crear playlist con duración de 1 minuto
+        cocheMock.crearPlaylistPersonalizada(Arrays.asList("Juan Pérez"), 1);
+
+        // Assert
+        assertEquals(1, cocheMock.getCanciones().size(), "Solo debe añadirse la canción corta.");
+        assertEquals("Cancion Corta", cocheMock.getCanciones().get(0).getTitulo(), "La única canción debe ser la de 50 segundos.");
+    }
+
+
+    @ParameterizedTest
+    @CsvSource({
+        "Juan Pérez, 10, 3",
+        "Ana García, 15, 3",
+        "María López, 20, 3"
+    })
+    @DisplayName("CP10.5: Crear playlist personalizada con duración alta")
+    void testPlaylistDuracionAlta(String usuario, int duracionMax, int cancionesEsperadas) {
+        // Arrange - Mockear el coche
+        Coche cocheMock = Mockito.spy(new Coche());
+
+        // Crear artista
+        Artista artista = new Artista("Artista1");
+
+        // Crear álbum como mock
+        Album albumMock = Mockito.mock(Album.class);
+
+        // Crear canciones
+        Cancion cancion1 = new Cancion(1, "Cancion Corta", albumMock, artista, 180);  // 3 minutos
+        Cancion cancion2 = new Cancion(2, "Cancion Media", albumMock, artista, 400);  // 6.67 minutos
+        Cancion cancion3 = new Cancion(3, "Cancion Larga", albumMock, artista, 600);  // 10 minutos
+
+        // Crear usuario mock
+        Usuario usuarioMock = Mockito.mock(Usuario.class);
+
+        // Configurar el usuario mock
+        Mockito.when(usuarioMock.getNombre()).thenReturn(usuario.split(" ")[0]);
+        Mockito.when(usuarioMock.getApellido()).thenReturn(usuario.split(" ")[1]);
+        Mockito.when(usuarioMock.getListaAlbumes()).thenReturn(List.of(albumMock));
+
+        // Mockear el método `buscarUsuario()` para devolver el usuario mock
+        Mockito.doReturn(usuarioMock).when(cocheMock).buscarUsuario(usuario.split(" ")[0], usuario.split(" ")[1]);
+
+        // Configurar las canciones en el álbum mock
+        Mockito.when(albumMock.getListaCanciones()).thenReturn(List.of(cancion1, cancion2, cancion3));
+
+        // Act - Crear playlist personalizada
+        cocheMock.crearPlaylistPersonalizada(List.of(usuario), duracionMax);
+
+        // Assert
+        assertEquals(cancionesEsperadas, cocheMock.getCanciones().size(), 
+                     "La cantidad de canciones debe coincidir con las que cumplen la duración máxima.");
+
+        // Verificar que todas las canciones cumplen el criterio de duración
+        assertTrue(cocheMock.getCanciones().stream()
+                            .allMatch(c -> c.getDuracion() <= duracionMax * 60),
+                   "Todas las canciones deben cumplir con la duración máxima permitida.");
+    }
+
+
+
+    
+    // HU11: Crear Playlist Personalizada con Duración Baja (1 minuto o menos)
+    
+    @Test
+    @DisplayName("CP11.1: Crear playlist con duración de 1 minuto")
+    void testPlaylistDuracion1Minuto() {
+        // Arrange - Mockear el coche
+        Coche cocheMock = Mockito.spy(new Coche());
+
+        // Crear artista
+        Artista artista = new Artista("Artista1");
+
+        // Crear álbum como mock
+        Album albumMock = Mockito.mock(Album.class);
+
+        // Crear canciones
+        Cancion cancion1 = new Cancion(1, "Cancion Corta", albumMock, artista, 110);   // 110 segundos
+        Cancion cancion2 = new Cancion(2, "Cancion Larga", albumMock, artista, 300);  // 5 minutos
+
+        // Crear usuario mock
+        Usuario usuarioMock = Mockito.mock(Usuario.class);
+        Mockito.when(usuarioMock.getNombre()).thenReturn("Juan");
+        Mockito.when(usuarioMock.getApellido()).thenReturn("Pérez");
+        Mockito.when(usuarioMock.getListaAlbumes()).thenReturn(List.of(albumMock));
+
+        // Mockear método buscarUsuario() para devolver usuarioMock
+        Mockito.doReturn(usuarioMock).when(cocheMock).buscarUsuario("Juan", "Pérez");
+
+        // Configurar canciones en el álbum mock
+        Mockito.when(albumMock.getListaCanciones()).thenReturn(List.of(cancion1, cancion2));
+
+        // Act & Assert - Verificar que no se lanza ninguna excepción
+        assertDoesNotThrow(() -> {
+            cocheMock.crearPlaylistPersonalizada(List.of("Juan Pérez"), 1);
+        }, "No debe lanzarse ninguna excepción por duración baja.");
+
+        // Assert - La playlist debe estar vacía
+        assertTrue(cocheMock.getCanciones().isEmpty(), "La playlist debe estar vacía porque la duración es muy baja.");
+    }
+
+    @Test
+    @DisplayName("CP11.2: Crear playlist con duración de 0 minutos")
+    void testPlaylistDuracion0Minutos() {
+        // Arrange - Mockear el coche
+        Coche cocheMock = Mockito.spy(new Coche());
+
+        // Crear artista
+        Artista artista = new Artista("Artista2");
+
+        // Crear álbum como mock
+        Album albumMock = Mockito.mock(Album.class);
+
+        // Crear canciones
+        Cancion cancion1 = new Cancion(1, "Cancion Corta", albumMock, artista, 30);   // 30 segundos
+        Cancion cancion2 = new Cancion(2, "Cancion Larga", albumMock, artista, 200);  // 3.33 minutos
+
+        // Crear usuario mock
+        Usuario usuarioMock = Mockito.mock(Usuario.class);
+        Mockito.when(usuarioMock.getNombre()).thenReturn("Ana");
+        Mockito.when(usuarioMock.getApellido()).thenReturn("García");
+        Mockito.when(usuarioMock.getListaAlbumes()).thenReturn(List.of(albumMock));
+
+        // Mockear método buscarUsuario() para devolver usuarioMock
+        Mockito.doReturn(usuarioMock).when(cocheMock).buscarUsuario("Ana", "García");
+
+        // Configurar canciones en el álbum mock
+        Mockito.when(albumMock.getListaCanciones()).thenReturn(List.of(cancion1, cancion2));
+
+        // Act & Assert - Verificar que no se lanza ninguna excepción
+        assertDoesNotThrow(() -> {
+            cocheMock.crearPlaylistPersonalizada(List.of("Ana García"), 0);
+        }, "No debe lanzarse ninguna excepción por duración de 0 minutos.");
+
+        // Assert - La playlist debe estar vacía
+        assertTrue(cocheMock.getCanciones().isEmpty(), "La playlist debe estar vacía porque la duración es 0 minutos.");
+    }
+
+    
+    // HU12: Crear Playlist Personalizada con Duración Alta (10 minutos o más)
+    
+    @Test
+    @DisplayName("CP12.1: Crear playlist con duración de 10 minutos para usuarios específicos")
+    void testPlaylistDuracion10Minutos() {
+        // Arrange - Mockear el coche
+        Coche cocheMock = Mockito.spy(new Coche());
+
+        // Crear artista
+        Artista artista = new Artista("Artista1");
+
+        // Crear álbum como mock
+        Album albumMock = Mockito.mock(Album.class);
+
+        // Crear canciones
+        Cancion cancion1 = new Cancion(1, "Cancion Corta", albumMock, artista, 180);  // 3 minutos
+        Cancion cancion2 = new Cancion(2, "Cancion Media", albumMock, artista, 400);  // 6.67 minutos
+        Cancion cancion3 = new Cancion(3, "Cancion Larga", albumMock, artista, 600);  // 10 minutos
+
+        // Crear usuario mock
+        Usuario usuarioMock = Mockito.mock(Usuario.class);
+        Mockito.when(usuarioMock.getNombre()).thenReturn("Juan");
+        Mockito.when(usuarioMock.getApellido()).thenReturn("Pérez");
+        Mockito.when(usuarioMock.getListaAlbumes()).thenReturn(List.of(albumMock));
+
+        // Mockear método buscarUsuario() para devolver usuarioMock
+        Mockito.doReturn(usuarioMock).when(cocheMock).buscarUsuario("Juan", "Pérez");
+
+        // Configurar canciones en el álbum mock
+        Mockito.when(albumMock.getListaCanciones()).thenReturn(List.of(cancion1, cancion2, cancion3));
+
+        // Act - Crear playlist personalizada
+        cocheMock.crearPlaylistPersonalizada(List.of("Juan Pérez"), 10);
+
+        // Assert - Verificar que todas las canciones que cumplen con la duración se añaden
+        assertEquals(3, cocheMock.getCanciones().size(), "La playlist debe contener todas las canciones que cumplen la duración máxima.");
+        
+        assertNotNull(cocheMock.getCanciones(), "La playlist no debe ser nula.");
+        assertTrue(cocheMock.getCanciones().contains(cancion1), "La canción corta debe estar en la playlist.");
+        assertTrue(cocheMock.getCanciones().contains(cancion2), "La canción media debe estar en la playlist.");
+        assertTrue(cocheMock.getCanciones().contains(cancion3), "La canción larga debe estar en la playlist.");
+    }
+
+    @Test
+    @DisplayName("CP12.2: Crear playlist con duración alta para un usuario sin canciones largas")
+    void testPlaylistDuracionAltaSinCancionesLargas() {
+        // Arrange - Mockear el coche
+        Coche cocheMock = Mockito.spy(new Coche());
+
+        // Crear artista
+        Artista artista = new Artista("Artista2");
+
+        // Crear álbum como mock
+        Album albumMock = Mockito.mock(Album.class);
+
+        // Crear canciones (todas cortas, menos de 3 minutos)
+        Cancion cancion1 = new Cancion(1, "Cancion Corta 1", albumMock, artista, 120);  // 2 minutos
+        Cancion cancion2 = new Cancion(2, "Cancion Corta 2", albumMock, artista, 180);  // 3 minutos
+
+        // Crear usuario mock
+        Usuario usuarioMock = Mockito.mock(Usuario.class);
+        Mockito.when(usuarioMock.getNombre()).thenReturn("Juan");
+        Mockito.when(usuarioMock.getApellido()).thenReturn("Pérez");
+        Mockito.when(usuarioMock.getListaAlbumes()).thenReturn(List.of(albumMock));
+
+        // Mockear método buscarUsuario() para devolver usuarioMock
+        Mockito.doReturn(usuarioMock).when(cocheMock).buscarUsuario("Juan", "Pérez");
+
+        // Configurar canciones en el álbum mock
+        Mockito.when(albumMock.getListaCanciones()).thenReturn(List.of(cancion1, cancion2));
+
+        // Act - Crear playlist personalizada con duración alta (10 minutos)
+        cocheMock.crearPlaylistPersonalizada(List.of("Juan Pérez"), 10);
+
+        // Assert - Solo deben incluirse las canciones cortas
+        assertEquals(2, cocheMock.getCanciones().size(), "Solo deben añadirse las canciones cortas ya que no hay canciones largas.");
+        
+        assertNotNull(cocheMock.getCanciones(), "La playlist no debe ser nula.");
+        assertTrue(cocheMock.getCanciones().contains(cancion1), "La canción corta 1 debe estar en la playlist.");
+        assertTrue(cocheMock.getCanciones().contains(cancion2), "La canción corta 2 debe estar en la playlist.");
+    }
+    
+    // HU13: Crear Playlist Personalizada y Verificar Integridad del Contenido
+    
+    @Test
+    @DisplayName("CP13.1: Verificar integridad y ausencia de duplicados tras crear la playlist")
+    void testPlaylistSinDuplicados() {
+        // Arrange - Mockear el coche
+        Coche cocheMock = Mockito.spy(new Coche());
+
+        // Crear artista
+        Artista artista = new Artista("Artista1");
+
+        // Crear álbum como mock
+        Album albumMock = Mockito.mock(Album.class);
+
+        // Crear canciones (algunas con el mismo título y duración)
+        Cancion cancion1 = new Cancion(1, "Cancion1", albumMock, artista, 120);  // 2 minutos
+        Cancion cancion2 = new Cancion(2, "Cancion2", albumMock, artista, 180);  // 3 minutos
+        Cancion cancion3 = new Cancion(3, "Cancion1", albumMock, artista, 120);  // Duplicado en título y duración
+
+        // Crear usuarios
+        Usuario usuario1 = Mockito.mock(Usuario.class);
+        Usuario usuario2 = Mockito.mock(Usuario.class);
+
+        Mockito.when(usuario1.getNombre()).thenReturn("Juan");
+        Mockito.when(usuario1.getApellido()).thenReturn("Pérez");
+        Mockito.when(usuario1.getListaAlbumes()).thenReturn(List.of(albumMock));
+
+        Mockito.when(usuario2.getNombre()).thenReturn("Ana");
+        Mockito.when(usuario2.getApellido()).thenReturn("García");
+        Mockito.when(usuario2.getListaAlbumes()).thenReturn(List.of(albumMock));
+
+        // Mockear método `buscarUsuario()` para devolver los mocks
+        Mockito.doReturn(usuario1).when(cocheMock).buscarUsuario("Juan", "Pérez");
+        Mockito.doReturn(usuario2).when(cocheMock).buscarUsuario("Ana", "García");
+
+        // Configurar las canciones en el álbum mock
+        Mockito.when(albumMock.getListaCanciones()).thenReturn(List.of(cancion1, cancion2, cancion3));
+
+        // Act - Crear playlist personalizada con duración máxima de 5 minutos
+        cocheMock.crearPlaylistPersonalizada(List.of("Juan Pérez", "Ana García"), 5);
+
+        // Assert - Verificar ausencia de duplicados
+        Set<Cancion> setCanciones = new HashSet<>(cocheMock.getCanciones());
+        assertEquals(setCanciones.size(), cocheMock.getCanciones().size(), "No debe haber duplicados en la playlist.");
+
+        // Verificar que todas las canciones cumplen la duración
+        assertTrue(cocheMock.getCanciones().stream().allMatch(c -> c.getDuracion() <= 300), 
+                   "Todas las canciones deben cumplir con la duración máxima de 5 minutos.");
+
+        // Verificar que todas las canciones son de los usuarios seleccionados
+        assertTrue(cocheMock.getCanciones().stream()
+                            .allMatch(c -> c.getArtista().equals(artista)),
+                   "Todas las canciones deben pertenecer al artista configurado.");
+    }
+
+    @Test
+    @DisplayName("CP13.2: Verificar que no se añadan canciones de usuarios no seleccionados")
+    void testPlaylistFiltrarUsuarios() {
+        // Arrange - Mockear el coche
+        Coche cocheMock = Mockito.spy(new Coche());
+
+        // Crear artista
+        Artista artista = new Artista("Artista2");
+
+        // Crear álbum como mock
+        Album albumMock1 = Mockito.mock(Album.class);
+        Album albumMock2 = Mockito.mock(Album.class);
+        Album albumMock3 = Mockito.mock(Album.class);
+
+        // Crear canciones
+        Cancion cancion1 = new Cancion(1, "Cancion1", albumMock1, artista, 150);  // 2.5 minutos
+        Cancion cancion2 = new Cancion(2, "Cancion2", albumMock2, artista, 250);  // 4.17 minutos
+        Cancion cancion3 = new Cancion(3, "Cancion Excluida", albumMock3, artista, 300);  // 5 minutos
+
+        // Crear usuarios
+        Usuario usuario1 = Mockito.mock(Usuario.class);
+        Usuario usuario2 = Mockito.mock(Usuario.class);
+        Usuario usuarioExcluido = Mockito.mock(Usuario.class);
+
+        Mockito.when(usuario1.getNombre()).thenReturn("Juan");
+        Mockito.when(usuario1.getApellido()).thenReturn("Pérez");
+        Mockito.when(usuario1.getListaAlbumes()).thenReturn(List.of(albumMock1));
+
+        Mockito.when(usuario2.getNombre()).thenReturn("Ana");
+        Mockito.when(usuario2.getApellido()).thenReturn("García");
+        Mockito.when(usuario2.getListaAlbumes()).thenReturn(List.of(albumMock2));
+
+        Mockito.when(usuarioExcluido.getNombre()).thenReturn("María");
+        Mockito.when(usuarioExcluido.getApellido()).thenReturn("López");
+        Mockito.when(usuarioExcluido.getListaAlbumes()).thenReturn(List.of(albumMock3));
+
+        // Mockear método `buscarUsuario()` para devolver los mocks
+        Mockito.doReturn(usuario1).when(cocheMock).buscarUsuario("Juan", "Pérez");
+        Mockito.doReturn(usuario2).when(cocheMock).buscarUsuario("Ana", "García");
+        Mockito.doReturn(usuarioExcluido).when(cocheMock).buscarUsuario("María", "López");
+
+        // Configurar canciones en el álbum mock
+        Mockito.when(albumMock1.getListaCanciones()).thenReturn(List.of(cancion1));
+        Mockito.when(albumMock2.getListaCanciones()).thenReturn(List.of(cancion2));
+        Mockito.when(albumMock3.getListaCanciones()).thenReturn(List.of(cancion3));
+
+        // Act - Crear playlist personalizada con duración máxima de 5 minutos para "Juan Pérez" y "Ana García"
+        cocheMock.crearPlaylistPersonalizada(List.of("Juan Pérez", "Ana García"), 5);
+
+        // Assert - Verificar que no se incluyen canciones del usuario excluido ("María López")
+        assertFalse(cocheMock.getCanciones().stream()
+                             .anyMatch(c -> c.getTitulo().equals("Cancion Excluida")),
+                   "No deben incluirse canciones del usuario excluido.");
+
+        // Verificar que todas las canciones son de los usuarios seleccionados
+        assertEquals(2, cocheMock.getCanciones().size(), "La playlist debe contener solo canciones de los usuarios seleccionados.");
+    }
+
 }

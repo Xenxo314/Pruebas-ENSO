@@ -1,5 +1,7 @@
 package coche;
 
+import java.util.Objects;
+
 public class Cancion {
 
 	private int id;
@@ -22,10 +24,29 @@ public class Cancion {
         return "Id: " + id + "Título: " + titulo + ", Álbum: " + album + ", Artista: " + artista + ", Duración: " + duracion + "s";
     }
 
-	// GETTERS
-	public int getId() {
-		return id;
+	
+	
+	
+	
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(album, titulo);
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Cancion other = (Cancion) obj;
+		return Objects.equals(album, other.album) && Objects.equals(titulo, other.titulo);
+	}
+
+	// GETTERS
 	public String getTitulo() {
 		return titulo;
 	}
@@ -39,22 +60,6 @@ public class Cancion {
 		return duracion;
 	}
 	
-	// SETTERS
-	public void setId(int id) {
-		this.id = id;
-	}
-	public void setTitulo(String titulo) {
-		this.titulo = titulo;
-	}
-	public void setAlbum(Album album) {
-		this.album = album;
-	}
-	public void setArtista(Artista artista) {
-		this.artista = artista;
-	}
-	public void setDuracion(int duracion) {
-		this.duracion = duracion;
-	}
 	
 	
 	

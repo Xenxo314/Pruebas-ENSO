@@ -7,11 +7,6 @@ public class Artista {
 
 	private String nombre;
 
-	public Artista() {
-		super();
-		nombre = new String();
-	}
-
 	public Artista(String nombre) {
 		super();
 		this.nombre = nombre;
@@ -39,14 +34,5 @@ public class Artista {
 		return "Artista [nombre=" + nombre + "]";
 	}
 
-	public String getNombre() {
-		return nombre;
-	}
-
-	public void setNombre(String nombre) {
-		this.nombre = nombre;
-	}
-
-	
 	
 }

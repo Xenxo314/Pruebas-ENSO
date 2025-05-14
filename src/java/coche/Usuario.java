@@ -21,6 +21,30 @@ public class Usuario {
         this.numCancionesUsuario = 0;
     }
 
+	// GETTERS	
+	public String getNombre() {
+		return nombre;
+	}
+	public String getApellido() {
+		return apellido;
+	}
+	public List<Album> getListaAlbumes() {
+		return listaAlbumes;
+	}
+
+	
+	
+	
+	
+	
+
+	@Override
+	public String toString() {
+		return "Usuario [nombre=" + nombre + ", apellido=" + apellido + "]";
+	}
+
+	
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(apellido, nombre);
@@ -36,49 +60,6 @@ public class Usuario {
 			return false;
 		Usuario other = (Usuario) obj;
 		return Objects.equals(apellido, other.apellido) && Objects.equals(nombre, other.nombre);
-	}
-	
-	
-	
-	@Override
-	public String toString() {
-		return "Usuario [nombre=" + nombre + ", apellido=" + apellido + ", listaAlbumes=" + listaAlbumes
-				+ ", indiceAlbumActual=" + indiceAlbumActual + ", indiceCancionActual=" + indiceCancionActual
-				+ ", numCancionesUsuario=" + numCancionesUsuario + "]";
-	}
-
-	// GETTERS	
-	public String getNombre() {
-		return nombre;
-	}
-	public String getApellido() {
-		return apellido;
-	}
-	public List<Album> getListaAlbumes() {
-		return listaAlbumes;
-	}
-	public int getIndiceAlbumActual() {
-		return indiceAlbumActual;
-	}
-	public int getIndiceCancionActual() {
-		return indiceCancionActual;
-	}
-	
-	// SETTERS
-	public void setNombre(String nombre) {
-		this.nombre = nombre;
-	}
-	public void setApellido(String apellido) {
-		this.apellido = apellido;
-	}
-	public void setListaAlbumes(List<Album> listaAlbumes) {
-		this.listaAlbumes = listaAlbumes;
-	}
-	public void setIndiceAlbumActual(int indiceAlbumActual) {
-		this.indiceAlbumActual = indiceAlbumActual;
-	}
-	public void setIndiceCancionActual(int indiceCancionActual) {
-		this.indiceCancionActual = indiceCancionActual;
 	}
 
 	// FUNCIONES AUXILIARES	
@@ -119,7 +100,6 @@ public class Usuario {
 	    while (true) {
 	        Album albumActual = listaAlbumes.get(indiceAlbumActual);
 	        List<Cancion> cancionesAlbum = albumActual.getListaCanciones();
-
 	        // Si el álbum actual tiene canciones disponibles
 	        if (!cancionesAlbum.isEmpty()) {
 	            // Si aún quedan canciones en el álbum actual
@@ -143,10 +123,12 @@ public class Usuario {
 	                return cancion;
 	            }
 	        }
-
+	        
 	        // Si el álbum actual no tiene canciones, pasamos al siguiente álbum
 	        indiceAlbumActual++;
 	        indiceCancionActual = 0;
+	        
+	        
 
 	        // Si llegamos al final de los álbumes, volvemos al primero
 	        if (indiceAlbumActual >= listaAlbumes.size()) {

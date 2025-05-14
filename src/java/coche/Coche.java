@@ -8,13 +8,6 @@ public class Coche {
 	private ArrayList<Usuario> pasajeros;
 	private ArrayList<Cancion> canciones;
 	
-	// Constructor con argumentos
-	public Coche(ArrayList<Usuario> pasajeros, ArrayList<Cancion> canciones) {
-		super();
-		this.pasajeros = pasajeros;
-		this.canciones = canciones;
-	}
-	
 	// Constructor  sin argumentos
 	public Coche() {
 		pasajeros = new ArrayList<Usuario>();
@@ -28,15 +21,29 @@ public class Coche {
 	public ArrayList<Cancion> getCanciones() {
 		return canciones;
 	}
-
-	// SETTERS
-	public void setCanciones(ArrayList<Cancion> canciones) {
-		this.canciones = canciones;
-	}
-	public void setPasajeros(ArrayList<Usuario> pasajeros) {
-		this.pasajeros = pasajeros;
-	}
 	
+	@Override
+	public String toString() {
+		return "Coche [pasajeros=" + pasajeros + ", canciones=" + canciones + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(canciones, pasajeros);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Coche other = (Coche) obj;
+		return Objects.equals(canciones, other.canciones) && Objects.equals(pasajeros, other.pasajeros);
+	}
+
 	// MÉTODOS AUXILIARES
 	public Usuario buscarUsuario(String nombre, String apellido) {
 	    for (Usuario usuario : pasajeros) {
@@ -168,10 +175,8 @@ public class Coche {
         }
     }
 
-
-	
     ////////////////////////////////////////////////////////////////
-    
+
 	public void randomizarPlayList(){
 		Collections.shuffle(canciones);
 	}
@@ -180,10 +185,10 @@ public class Coche {
     
 	public void randomizarArtista(Artista autor) {
 		
-		 // Filtrar canciones que no corresponden al artista
+		// Filtrar canciones que no corresponden al artista
 	    canciones.removeIf(cancion -> !cancion.getArtista().equals(autor));
-	    
 		Collections.shuffle(canciones);
+		
 	}
 	
 	////////////////////////////////////////////////////////////////
@@ -198,19 +203,18 @@ public class Coche {
 	    int duracionMaxSegundos = duracionMaxMinutos * 60;
 
 	    for (String nombreCompleto : nombresUsuarios) {
+	    	
 	        String[] partes = nombreCompleto.split(" ");
 	        String nombre = partes[0];
 	        String apellido = partes.length > 1 ? partes[1] : "";
 
 	        Usuario usuario = buscarUsuario(nombre, apellido);
-	        
-	        
 
 	        if (usuario != null) {
 	            for (Album album : usuario.getListaAlbumes()) {
-	            	
+
 	                for (Cancion cancion : album.getListaCanciones()) {
-	                    if (cancion.getDuracion() < duracionMaxSegundos) {
+	                    if (cancion.getDuracion() <= duracionMaxSegundos && !canciones.contains(cancion)) {
 	                    	canciones.add(cancion);
 	                    }
 	                }

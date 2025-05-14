@@ -10,13 +10,6 @@ public class Album {
 	private String nombre;
 	 private List<Cancion> listaCanciones;
 
-	public Album() {
-		super();
-		artista = new Artista();
-		nombre = new String();
-		listaCanciones = new ArrayList<Cancion>();
-	}
-
 	public Album(String nombre, Artista artista) {
 		super();
 		this.artista = artista;
@@ -42,28 +35,13 @@ public class Album {
 				&& Objects.equals(nombre, other.nombre);
 	}
 
-	public Artista getArtista() {
-		return artista;
-	}
-
-	public void setArtista(Artista artista) {
-		this.artista = artista;
-	}
-
 	public String getNombre() {
 		return nombre;
 	}
 
-	public void setNombre(String nombre) {
-		this.nombre = nombre;
-	}
 
 	public List<Cancion> getListaCanciones() {
 		return listaCanciones;
-	}
-
-	public void setListaCanciones(List<Cancion> listaCanciones) {
-		this.listaCanciones = listaCanciones;
 	}
 	
 	// MÉTODOS AUXILIARES
