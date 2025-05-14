@@ -24,10 +24,6 @@ public class Cancion {
         return "Id: " + id + "Título: " + titulo + ", Álbum: " + album + ", Artista: " + artista + ", Duración: " + duracion + "s";
     }
 
-	
-	
-	
-	
 
 	@Override
 	public int hashCode() {

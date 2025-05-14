@@ -864,50 +864,6 @@ class CocheTest {
     
     //////////////////////////////////////////////////////////////// Funcionalidad: Crear Playlist Personalizada por Usuarios y Duración
     
-    @Test
-    @DisplayName("Playlist con canciones < 3 min")
-    void playlistMenor3Min() {
-    	
-    	// Arrange
-    	String rutaArchivo = "src/resources/discos_usuarios.csv";
-    	try {
-            coche.leer_csv(rutaArchivo);
-        } catch (NumberFormatException | IOException e) {
-            e.printStackTrace();
-        }
-        
-        // Act
-        coche.crearPlaylistPersonalizada(Arrays.asList("Juan Pérez", "María López"), 3);
-
-        // Assert
-        assertEquals(3, coche.getCanciones().size());
-        assertTrue(coche.getCanciones().stream().anyMatch(c -> c.getTitulo().equals("Intro: Persona")), "Debería contener Intro: Persona");
-    }
-
-    @Test
-    @DisplayName("Usuarios inexistentes")
-    void usuariosInexistentes() {
-        initCoche();
-        coche.crearPlaylistPersonalizada(Arrays.asList("Carlos Fernández", "Pedro López"), 5);
-        assertTrue(coche.getCanciones().isEmpty(), "La playlist debe estar vacía");
-    }
-
-    @Test
-    @DisplayName("Sin usuarios")
-    void sinUsuarios() {
-        initCoche();
-        coche.crearPlaylistPersonalizada(new ArrayList<>(), 5);
-        assertTrue(coche.getCanciones().isEmpty(), "La playlist debe estar vacía");
-    }
-
-    @Test
-    @DisplayName("Duración muy baja")
-    void duracionBaja() {
-        initCoche();
-        coche.crearPlaylistPersonalizada(Arrays.asList("Juan Pérez", "Ana García"), 1);
-        assertTrue(coche.getCanciones().isEmpty(), "La playlist debe estar vacía");
-    }
-    
     // HU10: Crear Playlist Personalizada por Usuarios Específicos y Duración
     
     @ParameterizedTest

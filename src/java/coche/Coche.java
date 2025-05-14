@@ -212,7 +212,6 @@ public class Coche {
 
 	        if (usuario != null) {
 	            for (Album album : usuario.getListaAlbumes()) {
-
 	                for (Cancion cancion : album.getListaCanciones()) {
 	                    if (cancion.getDuracion() <= duracionMaxSegundos && !canciones.contains(cancion)) {
 	                    	canciones.add(cancion);
